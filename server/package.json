@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx watch src/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
@@ -19,10 +22,16 @@
   "type": "module",
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^26.1.2"
+    "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.3",
+    "drizzle-kit": "1.0.0-rc.4",
+    "tsx": "^4.23.5"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "1.0.0-rc.4",
     "express": "^5.2.1",
+    "pg": "^8.22.0",
     "zod": "^4.4.3"
   }
 }
