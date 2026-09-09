@@ -11,6 +11,8 @@ import { uploadPdfToCloudinary } from "../../lib/cloudinary.js";
 import { extractPdfFromBuffer } from "../../lib/pdf.js";
 import { scrapeWebsite } from "../../lib/firecrawl.js";
 import { fetchYoutubeTranscript } from "../../lib/youtube.js";
+import { enqueueSourceProcessing } from "../../lib/source-events.js";
+import { removeSourceFromIndex } from "../../services/source-processing.services.js";
 
 class SourceService {
   constructor(
@@ -64,13 +66,20 @@ class SourceService {
   ): Promise<SourceRecord> {
     await this.assertWorkspaceAccess(workspaceId, userId);
 
-    return this.sourceRepository.createSourceRecord({
+    const record = await this.sourceRepository.createSourceRecord({
       workspaceId,
       type: input.type,
       title: input.title,
       content: input.content,
-      status: "READY",
+      status: "PENDING",
     });
+
+    await enqueueSourceProcessing({
+      sourceId: record.id,
+      workspaceId: record.workspaceId,
+    });
+
+    return record;
   }
 
   async uploadPdfSource(
@@ -117,12 +126,12 @@ class SourceService {
       // Content extraction error caught gracefully
     }
 
-    return this.sourceRepository.createSourceRecord({
+    const record = await this.sourceRepository.createSourceRecord({
       workspaceId,
       type: "PDF",
       title: title?.trim() || file.originalname.replace(/\.pdf$/i, ""),
       content,
-      status: content ? "READY" : "PENDING",
+      status: "PENDING",
       metadata: {
         ...(secureUrl ? { fileUrl: secureUrl } : {}),
         fileName: originalFilename,
@@ -131,6 +140,13 @@ class SourceService {
         ...(pageCount !== undefined ? { pageCount } : {}),
       },
     });
+
+    await enqueueSourceProcessing({
+      sourceId: record.id,
+      workspaceId: record.workspaceId,
+    });
+
+    return record;
   }
 
   async importWebsiteSource(
@@ -142,17 +158,24 @@ class SourceService {
 
     const scraped = await scrapeWebsite(input.url);
 
-    return this.sourceRepository.createSourceRecord({
+    const record = await this.sourceRepository.createSourceRecord({
       workspaceId,
       type: "WEBSITE",
       title: input.title || scraped.title || input.url,
       content: scraped.markdown,
       url: scraped.sourceUrl,
-      status: "READY",
+      status: "PENDING",
       metadata: {
         importedFrom: scraped.sourceUrl,
       },
     });
+
+    await enqueueSourceProcessing({
+      sourceId: record.id,
+      workspaceId: record.workspaceId,
+    });
+
+    return record;
   }
 
   async importYoutubeSource(
@@ -164,17 +187,24 @@ class SourceService {
 
     const transcript = await fetchYoutubeTranscript(input.url);
 
-    return this.sourceRepository.createSourceRecord({
+    const record = await this.sourceRepository.createSourceRecord({
       workspaceId,
       type: "YOUTUBE",
       title: input.title || `YouTube: ${transcript.videoId}`,
       content: transcript.content,
       url: input.url,
-      status: "READY",
+      status: "PENDING",
       metadata: {
         videoId: transcript.videoId,
       },
     });
+
+    await enqueueSourceProcessing({
+      sourceId: record.id,
+      workspaceId: record.workspaceId,
+    });
+
+    return record;
   }
 
   async deleteSourceForWorkspace(
@@ -183,6 +213,7 @@ class SourceService {
     userId: string,
   ): Promise<void> {
     await this.getSourceForWorkspace(workspaceId, sourceId, userId);
+    await removeSourceFromIndex(workspaceId, sourceId);
     await this.sourceRepository.deleteSourceRecord(sourceId);
   }
 
@@ -192,6 +223,9 @@ class SourceService {
     sourceIds: string[],
   ): Promise<void> {
     await this.assertWorkspaceAccess(workspaceId, userId);
+    for (const sourceId of sourceIds) {
+      await removeSourceFromIndex(workspaceId, sourceId);
+    }
     await this.sourceRepository.bulkDeleteSourceRecords(sourceIds, workspaceId);
   }
 }
