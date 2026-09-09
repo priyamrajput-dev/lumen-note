@@ -14,5 +14,8 @@ export const workspaceRelation = defineRelations(
         to: r.user.id,
       }),
     },
+    user: {
+      workspaces: r.many.workspace(),
+    },
   }),
 );

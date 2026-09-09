@@ -1,2 +1,4 @@
 export * from "./schema/auth-schema.js";
 export * from "./schema/workspace.js";
+export * from "./schema/source.js";
+
