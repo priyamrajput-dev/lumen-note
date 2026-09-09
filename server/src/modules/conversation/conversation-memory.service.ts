@@ -1,10 +1,10 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { CHAT_MODEL } from "../lib/ai-config.js";
-import { addMemoriesFromMessages } from "../lib/mem0.js";
-import { conversationRepository } from "../modules/conversation/conversation.repository.js";
-import { messageRepository } from "../modules/conversation/message.repository.js";
-import { NotFoundError } from "../common/utils/app-error.js";
+import { CHAT_MODEL } from "../../lib/ai-config.js";
+import { addMemoriesFromMessages } from "../../lib/mem0.js";
+import { conversationRepository } from "./conversation.repository.js";
+import { messageRepository } from "./message.repository.js";
+import { NotFoundError } from "../../common/utils/app-error.js";
 
 export async function summarizeConversationById(
   conversationId: string,

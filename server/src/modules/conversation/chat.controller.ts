@@ -14,7 +14,7 @@ import {
   getConversationMessagesForWorkspace,
   listConversationsForWorkspace,
   streamWorkspaceChat,
-} from "../../services/chat.services.js";
+} from "./chat.service.js";
 
 class ChatController {
   private parseWorkspaceId(params: Request["params"]) {

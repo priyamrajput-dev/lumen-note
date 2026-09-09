@@ -12,7 +12,7 @@ import { extractPdfFromBuffer } from "../../lib/pdf.js";
 import { scrapeWebsite } from "../../lib/firecrawl.js";
 import { fetchYoutubeTranscript } from "../../lib/youtube.js";
 import { enqueueSourceProcessing } from "../../lib/source-events.js";
-import { removeSourceFromIndex } from "../../services/source-processing.services.js";
+import { removeSourceFromIndex } from "./source-processing.service.js";
 
 class SourceService {
   constructor(

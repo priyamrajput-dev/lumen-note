@@ -3,7 +3,7 @@ import { deleteUserMemory, listUserMemories } from "../../lib/mem0.js";
 import {
   createMemoryForUser,
   updateMemoryForUser,
-} from "../../services/memory.services.js";
+} from "./memory.service.js";
 import { ValidationError } from "../../common/utils/app-error.js";
 import { getZodFieldErrors } from "../../common/utils/zod-error.js";
 import {

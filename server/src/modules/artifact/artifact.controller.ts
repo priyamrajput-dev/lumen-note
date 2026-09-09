@@ -12,7 +12,7 @@ import {
   deleteArtifactForWorkspace,
   getArtifactForWorkspace,
   listArtifactsForWorkspace,
-} from "../../services/artifact.services.js";
+} from "./artifact.service.js";
 
 class ArtifactController {
   private parseWorkspaceId(params: Request["params"]) {

@@ -16,28 +16,28 @@ import {
   CHAT_MODELS,
   CONVERSATION_SUMMARY_INTERVAL,
   RECENT_MESSAGE_WINDOW,
-} from "../lib/ai-config.js";
-import { enqueueConversationSummarize } from "../lib/conversation-events.js";
+} from "../../lib/ai-config.js";
+import { enqueueConversationSummarize } from "../../lib/conversation-events.js";
 import {
   buildChatSystemPrompt,
   retrieveWorkspaceContext,
-} from "../lib/rag/retrieve.js";
-import { conversationRepository } from "../modules/conversation/conversation.repository.js";
-import { messageRepository } from "../modules/conversation/message.repository.js";
-import WorkspaceRepository from "../modules/workspace/workspace.repository.js";
+} from "../../lib/rag/retrieve.js";
+import { conversationRepository } from "./conversation.repository.js";
+import { messageRepository } from "./message.repository.js";
+import WorkspaceRepository from "../workspace/workspace.repository.js";
 import {
   formatTavilyResultsForPrompt,
   searchWeb,
   type TavilySearchResponse,
-} from "../lib/tavily.js";
-import { NotFoundError, ValidationError } from "../common/utils/app-error.js";
+} from "../../lib/tavily.js";
+import { NotFoundError, ValidationError } from "../../common/utils/app-error.js";
 import {
   buildConversationTitle,
   getLastUserMessageText,
   getTextFromUIMessage,
-} from "../utils/chat-message.js";
-import { addMemoriesFromMessages, searchUserMemories } from "../lib/mem0.js";
-import { env } from "../common/config/env.js";
+} from "../../utils/chat-message.js";
+import { addMemoriesFromMessages, searchUserMemories } from "../../lib/mem0.js";
+import { env } from "../../common/config/env.js";
 
 const workspaceRepo = new WorkspaceRepository();
 

@@ -1,10 +1,10 @@
 import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import { CHAT_MODEL } from "../lib/ai-config.js";
-import SourceRepository from "../modules/source/source.repository.js";
-import type { ArtifactRecord } from "../modules/artifact/artifact.repository.js";
-import { ValidationError } from "../common/utils/app-error.js";
+import { CHAT_MODEL } from "../../lib/ai-config.js";
+import SourceRepository from "../source/source.repository.js";
+import type { ArtifactRecord } from "./artifact.repository.js";
+import { ValidationError } from "../../common/utils/app-error.js";
 
 const sourceRepo = new SourceRepository();
 const MAX_CONTEXT_CHARS = 120_000;

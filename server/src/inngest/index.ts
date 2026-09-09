@@ -7,9 +7,9 @@ import {
   extractSourceContent,
   markSourceFailed,
   markSourceProcessing,
-} from "../services/source-processing.services.js";
-import { summarizeConversationById } from "../services/conversation-memory.services.js";
-import { processArtifactById } from "../services/artifact.services.js";
+} from "../modules/source/source-processing.service.js";
+import { summarizeConversationById } from "../modules/conversation/conversation-memory.service.js";
+import { processArtifactById } from "../modules/artifact/artifact.service.js";
 
 const sourceRepo = new SourceRepository();
 const chunkRepo = new SourceChunkRepository();

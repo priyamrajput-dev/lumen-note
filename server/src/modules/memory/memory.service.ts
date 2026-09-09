@@ -1,4 +1,4 @@
-import { addUserMemory, updateUserMemory } from "../lib/mem0.js";
+import { addUserMemory, updateUserMemory } from "../../lib/mem0.js";
 
 export function createMemoryForUser(
   userId: string,

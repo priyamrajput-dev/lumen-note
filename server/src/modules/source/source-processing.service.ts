@@ -1,18 +1,18 @@
 import type { PineconeRecord } from "@pinecone-database/pinecone";
-import { chunkPages, chunkText } from "../lib/chunking.js";
-import { embedTexts } from "../lib/openai.js";
-import { extractPdfFromCloudinary } from "../lib/pdf.js";
+import { chunkPages, chunkText } from "../../lib/chunking.js";
+import { embedTexts } from "../../lib/openai.js";
+import { extractPdfFromCloudinary } from "../../lib/pdf.js";
 import {
   deleteSourceVectors,
   type VectorMetadata,
   upsertSourceVectors,
-} from "../lib/pinecone.js";
+} from "../../lib/pinecone.js";
 import SourceRepository, {
   type SourceRecord,
-} from "../modules/source/source.repository.js";
+} from "./source.repository.js";
 import SourceChunkRepository, {
   type SourceChunkRecord,
-} from "../modules/source/source-chunk.repository.js";
+} from "./source-chunk.repository.js";
 
 const sourceRepo = new SourceRepository();
 const chunkRepo = new SourceChunkRepository();

@@ -1,15 +1,15 @@
-import { enqueueArtifactGeneration } from "../lib/artifact-events.js";
+import { enqueueArtifactGeneration } from "../../lib/artifact-events.js";
 import {
   artifactRepository,
   type ArtifactRecord,
-} from "../modules/artifact/artifact.repository.js";
-import WorkspaceRepository from "../modules/workspace/workspace.repository.js";
-import { NotFoundError } from "../common/utils/app-error.js";
+} from "./artifact.repository.js";
+import WorkspaceRepository from "../workspace/workspace.repository.js";
+import { NotFoundError } from "../../common/utils/app-error.js";
 import {
   gatherSourceContext,
   generateArtifactContent,
-} from "./artifact-generation.services.js";
-import type { CreateArtifactInput } from "../modules/artifact/artifact.validation.js";
+} from "./artifact-generation.service.js";
+import type { CreateArtifactInput } from "./artifact.validation.js";
 
 const workspaceRepo = new WorkspaceRepository();
 
