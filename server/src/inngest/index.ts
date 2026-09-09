@@ -9,6 +9,7 @@ import {
   markSourceProcessing,
 } from "../services/source-processing.services.js";
 import { summarizeConversationById } from "../services/conversation-memory.services.js";
+import { processArtifactById } from "../services/artifact.services.js";
 
 const sourceRepo = new SourceRepository();
 const chunkRepo = new SourceChunkRepository();
@@ -75,5 +76,25 @@ export const summarizeConversation = inngest.createFunction(
   },
 );
 
-export const functions = [processSource, summarizeConversation];
+export const generateArtifact = inngest.createFunction(
+  {
+    id: "generate-artifact",
+    retries: 2,
+    triggers: [{ event: "artifact/generate" }],
+  },
+  async ({ event, step }) => {
+    const { artifactId } = event.data;
+
+    await step.run("generate", () => processArtifactById(artifactId));
+
+    return { artifactId, status: "READY" };
+  },
+);
+
+export const functions = [
+  processSource,
+  summarizeConversation,
+  generateArtifact,
+];
+
 
