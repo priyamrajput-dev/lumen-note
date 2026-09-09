@@ -9,6 +9,11 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string(),
   CLIENT_ID: z.string(),
   CLIENT_SECRET: z.string(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_UPLOAD_PRESET: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  FIRECRAWL_API_KEY: z.string().optional(),
 });
 
 const createEnv = (env: NodeJS.ProcessEnv) => {

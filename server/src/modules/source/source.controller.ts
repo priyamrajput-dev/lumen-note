@@ -3,6 +3,8 @@ import SourceService from "./source.service.js";
 import {
   bulkDeleteSourcesSchema,
   createSourceSchema,
+  importWebsiteSchema,
+  importYoutubeSchema,
   listSourcesQuerySchema,
   sourceIdParamSchema,
   workspaceIdParamSchema,
@@ -54,6 +56,26 @@ class SourceController {
     return parsed.data;
   }
 
+  private parseImportWebsiteBody(body: unknown) {
+    const parsed = importWebsiteSchema.safeParse(body);
+
+    if (!parsed.success) {
+      throw new ValidationError("Validation failed", getZodFieldErrors(parsed.error));
+    }
+
+    return parsed.data;
+  }
+
+  private parseImportYoutubeBody(body: unknown) {
+    const parsed = importYoutubeSchema.safeParse(body);
+
+    if (!parsed.success) {
+      throw new ValidationError("Validation failed", getZodFieldErrors(parsed.error));
+    }
+
+    return parsed.data;
+  }
+
   private parseBulkDeleteBody(body: unknown) {
     const parsed = bulkDeleteSourcesSchema.safeParse(body);
 
@@ -94,6 +116,52 @@ class SourceController {
       input,
     );
     AppResponse.created(res, "Source created successfully", sourceRecord);
+  }
+
+  async uploadPdf(req: Request, res: Response) {
+    const { workspaceId } = this.parseWorkspaceId(req.params);
+
+    if (!req.file) {
+      throw new ValidationError("PDF file is required");
+    }
+
+    const title =
+      typeof req.body.title === "string" ? req.body.title : undefined;
+
+    const sourceRecord = await this.sourceService.uploadPdfSource(
+      workspaceId,
+      req.session.user.id,
+      req.file,
+      title,
+    );
+
+    AppResponse.created(res, "PDF uploaded successfully", sourceRecord);
+  }
+
+  async importWebsite(req: Request, res: Response) {
+    const { workspaceId } = this.parseWorkspaceId(req.params);
+    const input = this.parseImportWebsiteBody(req.body);
+    const sourceRecord = await this.sourceService.importWebsiteSource(
+      workspaceId,
+      req.session.user.id,
+      input,
+    );
+    AppResponse.created(res, "Website imported successfully", sourceRecord);
+  }
+
+  async importYoutube(req: Request, res: Response) {
+    const { workspaceId } = this.parseWorkspaceId(req.params);
+    const input = this.parseImportYoutubeBody(req.body);
+    const sourceRecord = await this.sourceService.importYoutubeSource(
+      workspaceId,
+      req.session.user.id,
+      input,
+    );
+    AppResponse.created(
+      res,
+      "YouTube transcript imported successfully",
+      sourceRecord,
+    );
   }
 
   async deleteSource(req: Request, res: Response) {

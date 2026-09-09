@@ -5,6 +5,7 @@ import SourceService from "./source.service.js";
 import SourceRepository from "./source.repository.js";
 import WorkspaceRepository from "../workspace/workspace.repository.js";
 import { requireAuth } from "../../common/middleware/require-auth.middleware.js";
+import { uploadSinglePdf } from "../../common/middleware/upload.middleware.js";
 
 export const sourceRoutes = Router({ mergeParams: true });
 
@@ -23,6 +24,22 @@ sourceRoutes.get(
 sourceRoutes.post(
   "/",
   asyncHandler(sourceController.createSource.bind(sourceController)),
+);
+
+sourceRoutes.post(
+  "/upload",
+  uploadSinglePdf,
+  asyncHandler(sourceController.uploadPdf.bind(sourceController)),
+);
+
+sourceRoutes.post(
+  "/import/website",
+  asyncHandler(sourceController.importWebsite.bind(sourceController)),
+);
+
+sourceRoutes.post(
+  "/import/youtube",
+  asyncHandler(sourceController.importYoutube.bind(sourceController)),
 );
 
 sourceRoutes.post(
