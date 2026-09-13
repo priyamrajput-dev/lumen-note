@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  /* Compatibility aliases for Shadcn UI components */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--surface-elevated);
+  --color-popover-foreground: var(--foreground);
+  --color-primary: var(--accent);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--surface-secondary);
+  --color-secondary-foreground: var(--foreground);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root,
+html.light {
+  --background: #F7F1E7;
+  --surface: #FFFDF8;
+  --surface-secondary: #F2ECE2;
+  --surface-elevated: #FFFFFF;
+  --foreground: #151515;
+  --foreground-secondary: #5F5A52;
+  --muted: #8A847B;
+  --border: #DDD5C9;
+  --accent: #C86B16;
+  --accent-hover: #A9560C;
+  --accent-subtle: #F3E2CC;
+  --success: #397A50;
+  --warning: #B7791F;
+  --error: #C44747;
+
+  --grid-line: rgba(21, 21, 21, 0.04);
+  --dot-color: rgba(21, 21, 21, 0.06);
+  --scrollbar-thumb: rgba(21, 21, 21, 0.15);
+  --scrollbar-hover: rgba(21, 21, 21, 0.28);
+}
+
+html.dark {
+  --background: #050505;
+  --surface: #0C0C0C;
+  --surface-secondary: #111111;
+  --surface-elevated: #161616;
+  --foreground: #F5F5F5;
+  --foreground-secondary: #A8A8A8;
+  --muted: #707070;
+  --border: #252525;
+  --accent: #D9781C;
+  --accent-hover: #F08A27;
+  --accent-subtle: #24170D;
+  --success: #55A96B;
+  --warning: #D6A23A;
+  --error: #E06B6B;
+
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --dot-color: rgba(255, 255, 255, 0.06);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-hover: rgba(255, 255, 255, 0.22);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code, pre, kbd {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background-color: var(--accent-subtle);
+    color: var(--foreground);
+  }
+}
+
+/* Background Patterns */
+.bg-technical-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.glow-subtle-accent {
+  background: radial-gradient(circle at 50% 0%, var(--accent-subtle) 0%, transparent 70%);
+}
+
+/* 3D Flashcard transforms */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Custom slim scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}

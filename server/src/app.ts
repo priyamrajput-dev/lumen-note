@@ -3,7 +3,7 @@ import express from "express";
 import type { Express } from "express";
 import cors from "cors";
 import { auth } from "./lib/auth.js";
-import { registerRoutes } from "./route/index.js";
+import { registerRoutes } from "./modules/route.js";
 import { errorHandler } from "./common/middleware/error-handler.middleware.js";
 import { env } from "./common/config/env.js";
 
