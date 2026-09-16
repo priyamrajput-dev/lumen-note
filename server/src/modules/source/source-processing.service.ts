@@ -2,6 +2,7 @@ import type { PineconeRecord } from "@pinecone-database/pinecone";
 import { chunkPages, chunkText } from "../../lib/chunking.js";
 import { embedTexts } from "../../lib/openai.js";
 import { extractPdfFromCloudinary } from "../../lib/pdf.js";
+import { deleteFromCloudinary } from "../../lib/cloudinary.js";
 import {
   deleteSourceVectors,
   type VectorMetadata,
@@ -13,6 +14,10 @@ import SourceRepository, {
 import SourceChunkRepository, {
   type SourceChunkRecord,
 } from "./source-chunk.repository.js";
+import { env } from "../../common/config/env.js";
+
+import { fetchYoutubeTranscript } from "../../lib/youtube.js";
+import { scrapeWebsite } from "../../lib/firecrawl.js";
 
 const sourceRepo = new SourceRepository();
 const chunkRepo = new SourceChunkRepository();
@@ -25,6 +30,8 @@ type SourceMetadata = {
   resourceType?: "raw" | "image";
   importedFrom?: string;
   videoId?: string;
+  channel?: string;
+  hasCaptions?: boolean;
   processingError?: string;
   chunkCount?: number;
   pageCount?: number;
@@ -63,6 +70,24 @@ async function extractSourceText(source: SourceRecord) {
       text: extracted.text,
       pageCount: extracted.pageCount,
       pages: extracted.pages,
+    };
+  }
+
+  if (source.type === "YOUTUBE" && source.url) {
+    const extracted = await fetchYoutubeTranscript(source.url);
+    return {
+      text: extracted.content,
+      pageCount: undefined,
+      pages: undefined,
+    };
+  }
+
+  if (source.type === "WEBSITE" && source.url) {
+    const scraped = await scrapeWebsite(source.url);
+    return {
+      text: scraped.markdown,
+      pageCount: undefined,
+      pages: undefined,
     };
   }
 
@@ -156,7 +181,30 @@ export async function removeSourceFromIndex(
   workspaceId: string,
   sourceId: string,
 ) {
-  await deleteSourceVectors(workspaceId, sourceId);
+  const chunks = await chunkRepo.findChunksBySourceId(sourceId);
+  const chunkIds = chunks.map((c) => c.id);
+
+  if (env.PINECONE_API_KEY && chunkIds.length > 0) {
+    try {
+      await deleteSourceVectors(workspaceId, chunkIds);
+    } catch (e) {
+      console.warn("Failed to delete vectors from Pinecone:", e);
+    }
+  }
+
+  try {
+    const source = await sourceRepo.findSourceById(sourceId);
+    const metadata = source?.metadata as Record<string, unknown> | undefined;
+    if (metadata?.publicId && typeof metadata.publicId === "string") {
+      await deleteFromCloudinary(
+        metadata.publicId,
+        (metadata.resourceType as "raw" | "image") ?? "raw",
+      );
+    }
+  } catch (e) {
+    console.warn("Failed to delete asset from Cloudinary:", e);
+  }
+
   await chunkRepo.deleteChunksBySourceId(sourceId);
 }
 
@@ -172,40 +220,46 @@ export async function embedAndIndexSource(
   const batchSize = 50;
   const records: PineconeRecord<VectorMetadata>[] = [];
 
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize);
-    const embeddings = await embedTexts(batch.map((chunk) => chunk.content));
+  if (env.OPENAI_API_KEY && env.PINECONE_API_KEY) {
+    try {
+      for (let i = 0; i < chunks.length; i += batchSize) {
+        const batch = chunks.slice(i, i + batchSize);
+        const embeddings = await embedTexts(batch.map((chunk) => chunk.content));
 
-    for (let j = 0; j < batch.length; j += 1) {
-      const chunk = batch[j]!;
-      const embedding = embeddings[j]!;
-      const chunkMetadata =
-        chunk.metadata &&
-        typeof chunk.metadata === "object" &&
-        !Array.isArray(chunk.metadata)
-          ? (chunk.metadata as Record<string, unknown>)
-          : {};
+        for (let j = 0; j < batch.length; j += 1) {
+          const chunk = batch[j]!;
+          const embedding = embeddings[j]!;
+          const chunkMetadata =
+            chunk.metadata &&
+            typeof chunk.metadata === "object" &&
+            !Array.isArray(chunk.metadata)
+              ? (chunk.metadata as Record<string, unknown>)
+              : {};
 
-      records.push({
-        id: chunk.id,
-        values: embedding,
-        metadata: {
-          workspaceId: source.workspaceId,
-          sourceId: source.id,
-          chunkId: chunk.id,
-          chunkIndex: chunk.index,
-          sourceTitle: source.title,
-          sourceType: source.type,
-          text: chunk.content.slice(0, 35000),
-          ...(typeof chunkMetadata.page === "number"
-            ? { page: chunkMetadata.page }
-            : {}),
-        },
-      });
+          records.push({
+            id: chunk.id,
+            values: embedding,
+            metadata: {
+              workspaceId: source.workspaceId,
+              sourceId: source.id,
+              chunkId: chunk.id,
+              chunkIndex: chunk.index,
+              sourceTitle: source.title,
+              sourceType: source.type,
+              text: chunk.content.slice(0, 35000),
+              ...(typeof chunkMetadata.page === "number"
+                ? { page: chunkMetadata.page }
+                : {}),
+            },
+          });
+        }
+      }
+
+      await upsertSourceVectors(source.workspaceId, records);
+    } catch (error) {
+      console.warn("Vector embedding/upsert skipped or failed:", error);
     }
   }
-
-  await upsertSourceVectors(source.workspaceId, records);
 
   const metadata =
     source.metadata &&

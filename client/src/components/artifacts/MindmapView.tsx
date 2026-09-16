@@ -98,7 +98,7 @@ export function MindmapView({ nodes, edges }: MindmapViewProps) {
                 y1={start.y}
                 x2={end.x}
                 y2={end.y}
-                stroke={isHighlighted ? "#C86B16" : "rgba(128, 128, 128, 0.25)"}
+                stroke={isHighlighted ? "var(--accent)" : "var(--border)"}
                 strokeWidth={isHighlighted ? 2.5 : 1.5}
                 strokeDasharray={isHighlighted ? "none" : "4 2"}
                 className="transition-all duration-200"

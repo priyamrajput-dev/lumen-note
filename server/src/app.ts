@@ -26,7 +26,13 @@ export function createApplication(): Express {
   app.all("/api/auth/{*any}", toNodeHandler(auth));
 
   // inngest background jobs endpoint
-  app.use("/api/inngest", serve({ client: inngest, functions }));
+  app.use(
+    "/api/inngest",
+    serve({
+      client: inngest,
+      functions,
+    }),
+  );
 
   // routes
   registerRoutes(app);

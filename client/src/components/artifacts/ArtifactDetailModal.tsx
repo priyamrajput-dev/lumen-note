@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import type {
   LearningArtifact,
   ArtifactFlashcardsContent,
@@ -121,8 +122,8 @@ export function ArtifactDetailModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-surface-secondary/50 shrink-0">
@@ -170,6 +171,7 @@ export function ArtifactDetailModal({
           {renderContent()}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

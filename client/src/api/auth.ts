@@ -9,6 +9,19 @@ export const authClient = createAuthClient({
 
 export const AUTH_QUERY_KEY = ["auth", "session"] as const;
 
+export function isDemoMode(): boolean {
+  return false;
+}
+
+export function exitDemoMode(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("lumen_demo_session");
+    localStorage.removeItem("lumen_demo_workspaces");
+    localStorage.removeItem("lumen_demo_sources");
+    localStorage.removeItem("lumen_demo_memories");
+  }
+}
+
 export async function fetchSession(): Promise<AuthSessionResponse | null> {
   try {
     const res = await apiClient.get<AuthSessionResponse | null>("/auth/get-session");
@@ -32,9 +45,15 @@ export function useSignOut() {
 
   return useMutation({
     mutationFn: async () => {
-      await authClient.signOut();
+      exitDemoMode();
+      try {
+        await authClient.signOut();
+      } catch (e) {
+        // ignore
+      }
     },
     onSuccess: () => {
+      exitDemoMode();
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
       queryClient.clear();
       window.location.href = "/login";

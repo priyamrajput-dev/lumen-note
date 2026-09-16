@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   useCreateTextSource,
   useImportWebsiteSource,
@@ -144,8 +145,8 @@ export function AddSourceModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="relative w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-border">
@@ -377,9 +378,9 @@ export function AddSourceModal({
                 YouTube Video URL <span className="text-accent">*</span>
               </label>
               <input
-                type="url"
+                type="text"
                 required
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
                 value={ytUrl}
                 onChange={(e) => setYtUrl(e.target.value)}
                 className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
@@ -388,12 +389,12 @@ export function AddSourceModal({
 
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                Custom Title <span className="text-muted font-normal">(optional)</span>
+                Custom Title <span className="text-muted font-normal">(optional, auto-detected if blank)</span>
               </label>
               <input
                 type="text"
                 maxLength={200}
-                placeholder="e.g. Stanford CS229 Lecture 1"
+                placeholder="e.g. Stanford CS25 Lecture 1"
                 value={ytTitle}
                 onChange={(e) => setYtTitle(e.target.value)}
                 className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
@@ -497,6 +498,7 @@ export function AddSourceModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

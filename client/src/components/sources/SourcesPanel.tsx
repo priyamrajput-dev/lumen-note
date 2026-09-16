@@ -66,10 +66,19 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
     );
   };
 
-  const handleDeleteSingle = async (sourceId: string, title: string) => {
+  const handleDeleteSingle = async (e: React.MouseEvent, sourceId: string, title: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (window.confirm(`Delete source "${title}"?`)) {
-      await deleteSourceMutation.mutateAsync(sourceId);
-      setSelectedIds((prev) => prev.filter((id) => id !== sourceId));
+      try {
+        await deleteSourceMutation.mutateAsync(sourceId);
+        setSelectedIds((prev) => prev.filter((id) => id !== sourceId));
+        if (previewSource?.id === sourceId) {
+          setPreviewSource(null);
+        }
+      } catch (err) {
+        console.error("Failed to delete source:", err);
+      }
     }
   };
 
@@ -81,8 +90,15 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
         }?`,
       )
     ) {
-      await bulkDeleteMutation.mutateAsync({ sourceIds: selectedIds });
-      setSelectedIds([]);
+      try {
+        await bulkDeleteMutation.mutateAsync({ sourceIds: selectedIds });
+        if (previewSource && selectedIds.includes(previewSource.id)) {
+          setPreviewSource(null);
+        }
+        setSelectedIds([]);
+      } catch (err) {
+        console.error("Failed to bulk delete sources:", err);
+      }
     }
   };
 
@@ -320,19 +336,25 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
-                            onClick={() => setPreviewSource(src)}
-                            className="p-1 rounded text-muted hover:text-foreground hover:bg-surface-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewSource(src);
+                            }}
+                            className="p-1 rounded text-muted hover:text-foreground hover:bg-surface-secondary cursor-pointer"
                             title="Preview document"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteSingle(src.id, src.title)}
-                            className="p-1 rounded text-muted hover:text-error hover:bg-error/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSingle(e, src.id, src.title);
+                            }}
+                            className="p-1 rounded text-muted hover:text-error hover:bg-error/10 cursor-pointer"
                             title="Delete source"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>

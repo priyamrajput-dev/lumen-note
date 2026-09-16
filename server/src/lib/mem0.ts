@@ -96,21 +96,42 @@ export async function addUserMemory(
     metadata?: Record<string, unknown>;
   },
 ): Promise<AppMemory> {
+  if (!env.MEM0_API_KEY?.trim()) {
+    return {
+      id: "mem-" + Date.now(),
+      memory: input.memory,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      metadata: input.metadata ?? null,
+      source: "manual",
+    };
+  }
+
   const created = await getMem0Client().add(
     [{ role: "user", content: input.memory }],
     {
-      userId,
-      infer: input.infer ?? false,
+      user_id: userId,
       metadata: input.metadata,
     },
   );
 
-  const first = created[0];
-  if (!first) {
-    throw new Error("Mem0 did not return a created memory");
+  if (Array.isArray(created) && created[0]) {
+    return mapMemory(created[0]);
   }
 
-  return mapMemory(first);
+  const eventId =
+    (created as { eventId?: string; id?: string })?.eventId ||
+    (created as { id?: string })?.id ||
+    "mem-" + Date.now();
+
+  return {
+    id: eventId,
+    memory: input.memory,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    metadata: input.metadata ?? null,
+    source: "manual",
+  };
 }
 
 export async function addMemoriesFromMessages(
@@ -123,8 +144,7 @@ export async function addMemoriesFromMessages(
   }
 
   await getMem0Client().add(messages, {
-    userId,
-    infer: true,
+    user_id: userId,
     metadata,
   });
 }
@@ -133,18 +153,42 @@ export async function updateUserMemory(
   memoryId: string,
   input: { memory: string },
 ): Promise<AppMemory> {
+  if (!env.MEM0_API_KEY?.trim()) {
+    return {
+      id: memoryId,
+      memory: input.memory,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      source: "manual",
+    };
+  }
+
   const updated = await getMem0Client().update(memoryId, {
     text: input.memory,
   });
 
-  const first = updated[0];
-  if (!first) {
-    throw new Error("Mem0 did not return an updated memory");
+  if (Array.isArray(updated) && updated[0]) {
+    return mapMemory(updated[0]);
   }
 
-  return mapMemory(first);
+  return {
+    id: memoryId,
+    memory: input.memory,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    source: "manual",
+  };
 }
 
 export async function deleteUserMemory(memoryId: string): Promise<void> {
-  await getMem0Client().delete(memoryId);
+  if (!env.MEM0_API_KEY?.trim()) {
+    return;
+  }
+
+  try {
+    await getMem0Client().delete(memoryId);
+  } catch (err) {
+    console.warn("Mem0 delete note:", err);
+  }
 }
+

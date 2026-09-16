@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useCreateArtifact } from "@/api/artifacts";
 import { useSources } from "@/api/sources";
 import { getErrorMessage } from "@/api/client";
@@ -112,8 +113,8 @@ export function GenerateArtifactModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="relative w-full max-w-xl rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between pb-3.5 border-b border-border">
           <div className="flex items-center gap-2">
@@ -270,6 +271,7 @@ export function GenerateArtifactModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

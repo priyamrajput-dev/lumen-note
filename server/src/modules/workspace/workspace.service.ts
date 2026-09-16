@@ -1,4 +1,5 @@
 import { NotFoundError } from "../../common/utils/app-error.js";
+import { deleteWorkspaceVectors } from "../../lib/pinecone.js";
 import WorkspaceRepository, { WorkspaceRecord } from "./workspace.repository.js";
 import { CreateWorkspaceInput, UpdateWorkspaceInput } from "./workspace.validation.js";
 
@@ -20,11 +21,12 @@ class WorkspaceService {
   }
 
   async createWorkspaceForUser(input: CreateWorkspaceInput, userId: string) {
-    return this.workspaceRepository.createWorkspaceRecord(input, userId);
+    const [workspace] = await this.workspaceRepository.createWorkspaceRecord(input, userId);
+    return workspace;
   }
 
   async updateWorkspaceForUser(input: UpdateWorkspaceInput, userId: string, workspaceId: string) {
-    const workspace = this.workspaceRepository.updateWorkspaceRecord(input, userId, workspaceId);
+    const [workspace] = await this.workspaceRepository.updateWorkspaceRecord(input, userId, workspaceId);
     if (!workspace) throw new NotFoundError("Workspace not found");
     return workspace;
   }
@@ -35,6 +37,11 @@ class WorkspaceService {
       userId,
     );
     if (!workspace) throw new NotFoundError("Workspace not found");
+    try {
+      await deleteWorkspaceVectors(workspaceId);
+    } catch (e) {
+      console.warn("Failed to delete workspace vectors from Pinecone:", e);
+    }
     return this.workspaceRepository.deleteWorkspaceRecord(workspaceId);
   }
 }

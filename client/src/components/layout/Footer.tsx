@@ -1,54 +1,28 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuthSession } from "@/api/auth";
-import { Sparkles, ArrowUpRight } from "lucide-react";
+import { LumenLogo } from "@/components/brand/LumenLogo";
 
 export function Footer() {
   const { data: session } = useAuthSession();
 
   return (
-    <footer className="border-t border-border bg-surface/80 transition-colors">
+    <footer className="border-t border-border bg-surface/70 backdrop-blur-md transition-colors">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-10 border-b border-border">
           {/* Brand Col */}
-          <div className="md:col-span-2 space-y-3">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2.5 font-bold text-foreground hover:opacity-90 transition-opacity"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-secondary border border-border text-accent shadow-2xs">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 2v3" />
-                  <path d="M12 19v3" />
-                  <path d="m4.93 4.93 2.12 2.12" />
-                  <path d="m16.95 16.95 2.12 2.12" />
-                  <path d="M2 12h3" />
-                  <path d="M19 12h3" />
-                  <path d="m4.93 19.07 2.12-2.12" />
-                  <path d="m16.95 7.05 2.12-2.12" />
-                </svg>
-              </div>
-              <span className="text-base tracking-tight text-foreground font-extrabold">
-                Lumen Note
-              </span>
+          <div className="md:col-span-2 space-y-3.5">
+            <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+              <LumenLogo size="md" variant="full" />
             </Link>
 
             <p className="text-xs text-foreground-secondary leading-relaxed max-w-sm">
-              Your personal AI-powered research workspace. Bring documents, notes, and sources together into grounded understanding.
+              Your personal AI-powered research workspace. Ingest PDFs, web pages, and video transcripts into grounded understanding.
             </p>
 
             {/* Operational Status Pill */}
-            <div className="pt-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary/70 px-3 py-1 text-[11px] font-mono text-muted">
+            <div className="pt-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-secondary/70 px-3 py-1 text-[11px] font-mono text-muted shadow-2xs">
                 <span className="flex h-2 w-2 rounded-full bg-success animate-pulse" />
                 <span>All Research Systems Operational</span>
               </div>
@@ -137,10 +111,10 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-muted font-mono">
           <p>© {new Date().getFullYear()} Lumen Note. Built for deep knowledge work.</p>
-          <div className="flex items-center gap-4 text-foreground-secondary">
+          <div className="flex items-center gap-3 text-foreground-secondary">
             <span>Readability &gt; Decoration</span>
             <span>•</span>
-            <span>Information Hierarchy &gt; Chrome</span>
+            <span>Grounding &gt; Hallucination</span>
           </div>
         </div>
       </div>

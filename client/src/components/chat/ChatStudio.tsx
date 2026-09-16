@@ -9,6 +9,7 @@ import {
 import { useSource } from "@/api/sources";
 import type { ChatModel, Source } from "@/types";
 import { CitationsPopover } from "./CitationsPopover";
+import { MarkdownMessage } from "./MarkdownMessage";
 import { SourcePreviewDrawer } from "@/components/sources/SourcePreviewDrawer";
 import {
   Sparkles,
@@ -44,9 +45,9 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
   // Model & search settings
   const [selectedModel, setSelectedModel] = useState<ChatModel>(defaultModel);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-
-  // Input & streaming state
   const [inputMessage, setInputMessage] = useState("");
+
+  // Streaming State
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [optimisticUserMsg, setOptimisticUserMsg] = useState<string | null>(null);
@@ -54,7 +55,10 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
 
   // Citation document preview modal state
   const [inspectSourceId, setInspectSourceId] = useState<string | null>(null);
-  const { data: inspectedSource } = useSource(workspaceId, inspectSourceId || undefined);
+  const { data: inspectedSource, isLoading: isInspectingSource } = useSource(
+    workspaceId,
+    inspectSourceId || undefined,
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -361,9 +365,13 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                     : "bg-surface border border-border text-foreground shadow-2xs"
                 }`}
               >
-                <div className="whitespace-pre-wrap selection:bg-accent-subtle leading-relaxed">
-                  {msg.content}
-                </div>
+                {msg.role === "USER" ? (
+                  <div className="whitespace-pre-wrap selection:bg-accent-subtle leading-relaxed">
+                    {msg.content}
+                  </div>
+                ) : (
+                  <MarkdownMessage content={msg.content} />
+                )}
 
                 {msg.role === "ASSISTANT" && msg.citations && (
                   <CitationsPopover
@@ -376,7 +384,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                   <button
                     type="button"
                     onClick={() => handleCopy(msg.id, msg.content)}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 rounded-md bg-surface-secondary text-muted hover:text-foreground transition-opacity"
+                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 rounded-md bg-surface-secondary text-muted hover:text-foreground transition-opacity cursor-pointer"
                     title="Copy message"
                   >
                     {copiedId === msg.id ? (
@@ -419,14 +427,14 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
               </div>
 
               <div className="rounded-2xl border border-accent/30 bg-surface p-4 text-xs leading-relaxed text-foreground shadow-sm">
-                <div className="whitespace-pre-wrap">
-                  {streamingText || (
-                    <span className="flex items-center gap-2 text-muted font-mono text-xs">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
-                      Analyzing sources & generating grounded response...
-                    </span>
-                  )}
-                </div>
+                {streamingText ? (
+                  <MarkdownMessage content={streamingText} isStreaming={true} />
+                ) : (
+                  <span className="flex items-center gap-2 text-muted font-mono text-xs">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
+                    Analyzing sources & generating grounded response...
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -488,6 +496,8 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
       {/* Direct Source Reading Drawer when Citation is clicked */}
       <SourcePreviewDrawer
         source={inspectedSource || null}
+        isOpen={Boolean(inspectSourceId)}
+        isLoading={isInspectingSource && !inspectedSource}
         onClose={() => setInspectSourceId(null)}
       />
     </div>
