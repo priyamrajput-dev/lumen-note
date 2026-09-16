@@ -23,6 +23,10 @@ export function createApplication(): Express {
 
   app.use(express.json());
 
+  app.get(["/", "/health"], (req, res) => {
+    res.status(200).json({ status: "ok", message: "Lumen Note API is running" });
+  });
+
   app.all("/api/auth/{*any}", toNodeHandler(auth));
 
   // inngest background jobs endpoint

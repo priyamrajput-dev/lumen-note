@@ -2,7 +2,7 @@ import "dotenv/config";
 import { z } from "zod";
 
 const envSchema = z.object({
-  PORT: z.coerce.number(),
+  PORT: z.coerce.number().default(8080),
   CLIENT_URL: z.string(),
   DATABASE_URL: z.string(),
   BETTER_AUTH_SECRET: z.string(),
