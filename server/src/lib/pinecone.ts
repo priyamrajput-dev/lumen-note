@@ -99,17 +99,27 @@ export async function upsertSourceVectors(
 
 export async function deleteSourceVectors(
   workspaceId: string,
-  sourceId: string,
+  vectorIds: string[],
 ) {
-  const index = await getPineconeIndex();
-  await index.namespace(workspaceId).deleteMany({
-    filter: { sourceId: { $eq: sourceId } },
-  });
+  if (vectorIds.length === 0) return;
+  try {
+    const index = await getPineconeIndex();
+    const batchSize = 100;
+    for (let i = 0; i < vectorIds.length; i += batchSize) {
+      await index.namespace(workspaceId).deleteMany(vectorIds.slice(i, i + batchSize));
+    }
+  } catch (error) {
+    console.warn("Failed to delete vectors by ID from Pinecone:", error);
+  }
 }
 
 export async function deleteWorkspaceVectors(workspaceId: string) {
-  const index = await getPineconeIndex();
-  await index.namespace(workspaceId).deleteAll();
+  try {
+    const index = await getPineconeIndex();
+    await index.namespace(workspaceId).deleteAll();
+  } catch (error) {
+    console.warn("Failed to delete workspace vectors from Pinecone:", error);
+  }
 }
 
 export async function queryWorkspaceVectors(

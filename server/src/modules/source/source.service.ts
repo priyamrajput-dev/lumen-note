@@ -104,15 +104,11 @@ class SourceService {
       publicId = upload.publicId;
       resourceType = upload.resourceType;
     } catch (error) {
-      // If Cloudinary is not configured, fall back to local buffer extraction
-      if (
-        !(
-          error instanceof ValidationError &&
-          error.message.includes("Cloudinary is not configured")
-        )
-      ) {
-        throw error;
-      }
+      // If Cloudinary upload fails, log and fall back to local buffer extraction
+      console.warn(
+        "Cloudinary upload skipped or failed, falling back to direct PDF buffer extraction:",
+        error instanceof Error ? error.message : error,
+      );
     }
 
     let content: string | null = null;
@@ -190,12 +186,14 @@ class SourceService {
     const record = await this.sourceRepository.createSourceRecord({
       workspaceId,
       type: "YOUTUBE",
-      title: input.title || `YouTube: ${transcript.videoId}`,
+      title: input.title?.trim() || transcript.title || `YouTube: ${transcript.videoId}`,
       content: transcript.content,
       url: input.url,
       status: "PENDING",
       metadata: {
         videoId: transcript.videoId,
+        channel: transcript.author || undefined,
+        hasCaptions: transcript.hasCaptions,
       },
     });
 

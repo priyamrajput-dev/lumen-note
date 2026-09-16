@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import type { Response } from "express";
 import { z } from "zod";
 import {
@@ -17,6 +16,7 @@ import {
   CONVERSATION_SUMMARY_INTERVAL,
   RECENT_MESSAGE_WINDOW,
 } from "../../lib/ai-config.js";
+import { getAIModel } from "../../lib/openai.js";
 import { enqueueConversationSummarize } from "../../lib/conversation-events.js";
 import {
   buildChatSystemPrompt,
@@ -143,8 +143,7 @@ export async function streamWorkspaceChat(
   const requestedModel = input.model ?? workspace.defaultModel ?? CHAT_MODEL;
   const chatModel =
     (CHAT_MODELS as readonly string[]).find((model) => model === requestedModel) ?? CHAT_MODEL;
-  const webSearchEnabled =
-    input.webSearch === true && !!env.TAVILY_API_KEY?.trim();
+  const webSearchEnabled = input.webSearch === true;
 
   const userText = getLastUserMessageText(input.messages);
   if (!userText) {
@@ -216,7 +215,7 @@ export async function streamWorkspaceChat(
         : undefined;
 
       const result = streamText({
-        model: openai(chatModel),
+        model: getAIModel(chatModel),
         system: systemPrompt,
         messages: await convertToModelMessages(contextMessages),
         tools,

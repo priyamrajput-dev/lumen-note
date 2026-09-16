@@ -19,8 +19,11 @@ const envSchema = z.object({
   PINECONE_INDEX: z.string().optional().default("lumennote"),
   INNGEST_EVENT_KEY: z.string().optional(),
   INNGEST_SIGNING_KEY: z.string().optional(),
+  INNGEST_DEV: z.string().optional(),
   MEM0_API_KEY: z.string().optional(),
   TAVILY_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
 });
 
 const createEnv = (env: NodeJS.ProcessEnv) => {

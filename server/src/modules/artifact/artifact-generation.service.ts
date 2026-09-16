@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { CHAT_MODEL } from "../../lib/ai-config.js";
+import { getAIModel } from "../../lib/openai.js";
 import SourceRepository from "../source/source.repository.js";
 import type { ArtifactRecord } from "./artifact.repository.js";
 import { ValidationError } from "../../common/utils/app-error.js";
@@ -121,7 +121,7 @@ export async function generateArtifactContent(
   switch (type) {
     case "SUMMARY": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         prompt: `Write a comprehensive markdown summary of the following sources:\n\n${sourceText}`,
       });
@@ -129,7 +129,7 @@ export async function generateArtifactContent(
     }
     case "TAKEAWAYS": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         output: Output.object({ schema: takeawaysSchema }),
         prompt: `Extract the most important key takeaways as concise bullet points from:\n\n${sourceText}`,
@@ -138,7 +138,7 @@ export async function generateArtifactContent(
     }
     case "FLASHCARDS": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         output: Output.object({ schema: flashcardsSchema }),
         prompt: `Create study flashcards (front/back) covering the main concepts from:\n\n${sourceText}`,
@@ -147,7 +147,7 @@ export async function generateArtifactContent(
     }
     case "QUIZ": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         output: Output.object({ schema: quizSchema }),
         prompt: `Create a multiple-choice quiz with explanations from:\n\n${sourceText}`,
@@ -156,7 +156,7 @@ export async function generateArtifactContent(
     }
     case "MINDMAP": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         output: Output.object({ schema: mindmapSchema }),
         prompt: `Create a mind map as nodes and edges. Use a central topic node and branch out logically from:\n\n${sourceText}`,
@@ -165,7 +165,7 @@ export async function generateArtifactContent(
     }
     case "REPORT": {
       const result = await generateText({
-        model: openai(CHAT_MODEL),
+        model: getAIModel(CHAT_MODEL),
         system,
         output: Output.object({ schema: reportSchema }),
         prompt: `Write a structured long-form report with sections and a full markdown version from:\n\n${sourceText}`,

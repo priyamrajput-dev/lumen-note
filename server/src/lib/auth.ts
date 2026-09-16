@@ -1,6 +1,7 @@
-import { betterAuth } from "better-auth/minimal";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "../db/index.js"; // your drizzle instance
+import { db } from "../db/index.js";
+import * as schema from "../db/schema.js";
 import { env } from "../common/config/env.js";
 
 const clientURL = env.CLIENT_URL;
@@ -11,7 +12,13 @@ export const auth = betterAuth({
   trustedOrigins: [clientURL],
 
   database: drizzleAdapter(db, {
-    provider: "pg", // or "mysql", "sqlite"
+    provider: "pg",
+    schema: {
+      user: schema.user,
+      session: schema.session,
+      account: schema.account,
+      verification: schema.verification,
+    },
   }),
   socialProviders: {
     google: {

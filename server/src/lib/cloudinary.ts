@@ -91,3 +91,28 @@ export async function uploadPdfToCloudinary(
     resourceType: result.resource_type === "image" ? "image" : "raw",
   };
 }
+
+export async function deleteFromCloudinary(
+  publicId: string,
+  resourceType: "raw" | "image" = "raw",
+): Promise<void> {
+  if (!cloudName || !apiKey || !apiSecret) {
+    return;
+  }
+
+  try {
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+  } catch (err) {
+    console.warn(`Failed to delete asset ${publicId} from Cloudinary:`, err);
+  }
+}
+
