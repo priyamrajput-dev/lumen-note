@@ -7,6 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "inngest:dev": "pnpm dlx inngest-cli@latest dev -u http://localhost:8080/api/inngest",
     "build": "tsc",
+    "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
@@ -26,12 +27,13 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.2.0",
-    "@types/node": "^26.1.2",
     "@types/pg": "^8.20.3",
     "drizzle-kit": "1.0.0-rc.4",
     "tsx": "^4.23.5"
   },
   "dependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^5.7.3",
     "@ai-sdk/openai": "^4.0.60",
     "@pinecone-database/pinecone": "^8.2.0",
     "@tavily/core": "^0.7.9",
