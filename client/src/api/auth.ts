@@ -3,8 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type { AuthSessionResponse } from "@/types";
 
+const getAuthBaseUrl = (): string => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl && apiUrl.startsWith("http")) {
+    return apiUrl.replace(/\/api\/?$/, "");
+  }
+  return typeof window !== "undefined" ? window.location.origin : "";
+};
+
 export const authClient = createAuthClient({
-  baseURL: window.location.origin,
+  baseURL: getAuthBaseUrl(),
 });
 
 export const AUTH_QUERY_KEY = ["auth", "session"] as const;
@@ -62,8 +70,9 @@ export function useSignOut() {
 }
 
 export async function signInWithGoogle() {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   await authClient.signIn.social({
     provider: "google",
-    callbackURL: "/dashboard",
+    callbackURL: `${origin}/dashboard`,
   });
 }
