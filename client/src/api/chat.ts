@@ -322,7 +322,8 @@ export async function streamChat({
       parts: [{ type: "text", text: m.content }],
     }));
 
-    const response = await fetch(`/api/workspaces/${workspaceId}/chat`, {
+    const baseUrl = apiClient.defaults.baseURL || "/api";
+    const response = await fetch(`${baseUrl}/workspaces/${workspaceId}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -33,12 +33,12 @@ export function LumenLogo({
             className="w-full h-full drop-shadow-xs"
           >
             <defs>
-              <linearGradient id="lumen-accent-grad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnBox">
+              <linearGradient id="lumen-accent-grad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="var(--accent)" />
                 <stop offset="50%" stopColor="#F97316" />
                 <stop offset="100%" stopColor="var(--accent-hover)" />
               </linearGradient>
-              <linearGradient id="lumen-glow-grad" x1="18" y1="2" x2="18" y2="34" gradientUnits="userSpaceOnBox">
+              <linearGradient id="lumen-glow-grad" x1="18" y1="2" x2="18" y2="34" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
                 <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
               </linearGradient>
