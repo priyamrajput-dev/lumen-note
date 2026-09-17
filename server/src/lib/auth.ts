@@ -10,6 +10,9 @@ const clientURL = env.CLIENT_URL;
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
+  account: {
+    skipStateCookieCheck: true,
+  },
   trustedOrigins: [
     clientURL,
     "http://localhost:3000",
