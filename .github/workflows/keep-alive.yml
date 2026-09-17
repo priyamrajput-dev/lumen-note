@@ -1,0 +1,24 @@
+name: Keep Alive Ping
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier inactive spin-down (15 min limit)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Render Backend Health Check
+        run: |
+          echo "Pinging Render backend health check..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://lumennote.onrender.com/api/health)
+          echo "Render health status code: $STATUS"
+
+      - name: Ping Vercel Frontend
+        run: |
+          echo "Pinging Vercel frontend..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://lumen-note-priyamrajput00s-projects.vercel.app)
+          echo "Vercel frontend status code: $STATUS"

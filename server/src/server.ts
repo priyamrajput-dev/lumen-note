@@ -2,14 +2,16 @@ import { createServer } from "http";
 import { createApplication } from "./app.js";
 import { env } from "./common/config/env.js";
 import { connectDB } from "./db/index.js";
+import { startKeepAliveService } from "./utils/keep-alive.js";
 
 async function startServer() {
   try {
     const server = createServer(createApplication());
 
-    server.listen(env.PORT,"0.0.0.0",() => {
+    server.listen(env.PORT, "0.0.0.0", () => {
       connectDB();
       console.log(`http server is listing at PORT: ${env.PORT}`);
+      startKeepAliveService();
     });
   } catch (error: unknown) {
     console.error(error);

@@ -91,10 +91,51 @@ export const generateArtifact = inngest.createFunction(
   },
 );
 
+export const keepAliveCron = inngest.createFunction(
+  {
+    id: "keep-alive-cron",
+    retries: 1,
+    triggers: [{ cron: "*/10 * * * *" }],
+  },
+  async ({ step }) => {
+    return await step.run("ping-health-and-frontend", async () => {
+      const backendUrl = (
+        process.env.RENDER_EXTERNAL_URL ||
+        process.env.BETTER_AUTH_URL ||
+        "https://lumennote.onrender.com"
+      ).replace(/\/+$/, "");
+
+      const frontendUrl = (
+        process.env.CLIENT_URL ||
+        "https://lumen-note-priyamrajput00s-projects.vercel.app"
+      ).replace(/\/+$/, "");
+
+      const [backendRes, frontendRes] = await Promise.allSettled([
+        fetch(`${backendUrl}/api/health`, {
+          headers: { "User-Agent": "LumenNote-InngestKeepAlive/1.0" },
+        }),
+        fetch(frontendUrl, {
+          headers: { "User-Agent": "LumenNote-InngestKeepAlive/1.0" },
+        }),
+      ]);
+
+      return {
+        timestamp: new Date().toISOString(),
+        backendStatus:
+          backendRes.status === "fulfilled" ? backendRes.value.status : "failed",
+        frontendStatus:
+          frontendRes.status === "fulfilled" ? frontendRes.value.status : "failed",
+      };
+    });
+  },
+);
+
 export const functions = [
   processSource,
   summarizeConversation,
   generateArtifact,
+  keepAliveCron,
 ];
+
 
 
