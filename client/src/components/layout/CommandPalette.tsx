@@ -30,7 +30,7 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
 
   const navigate = useNavigate();
   const { data: session } = useAuthSession();
-  const { data: workspaces } = useWorkspaces();
+  const { data: workspaces } = useWorkspaces({ enabled: !!session?.user });
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

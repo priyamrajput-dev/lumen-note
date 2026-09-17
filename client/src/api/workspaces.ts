@@ -10,7 +10,7 @@ import type {
 export const WORKSPACES_KEY = ["workspaces"] as const;
 export const workspaceKey = (id: string) => ["workspaces", id] as const;
 
-import { isDemoMode } from "./auth";
+import { isDemoMode, useAuthSession } from "./auth";
 
 const DEFAULT_DEMO_WORKSPACES: Workspace[] = [
   {
@@ -166,10 +166,14 @@ export async function deleteWorkspace(id: string): Promise<void> {
   }
 }
 
-export function useWorkspaces() {
+export function useWorkspaces(options?: { enabled?: boolean }) {
+  const { data: session } = useAuthSession();
+  const isAuth = isDemoMode() || Boolean(session?.user);
+
   return useQuery({
     queryKey: WORKSPACES_KEY,
     queryFn: getWorkspaces,
+    enabled: options?.enabled !== undefined ? options.enabled : isAuth,
   });
 }
 
