@@ -77,5 +77,6 @@ export async function signInWithGoogle() {
   await authClient.signIn.social({
     provider: "google",
     callbackURL: `${origin}/dashboard`,
+    errorCallbackURL: `${origin}/login?error=auth_failed`,
   });
 }

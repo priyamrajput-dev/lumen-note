@@ -14,6 +14,8 @@ import { functions } from "./inngest/index.js";
 export function createApplication(): Express {
   const app = express();
 
+  app.set("trust proxy", true);
+
   const allowedOrigins = [
     env.CLIENT_URL,
     "http://localhost:3000",
