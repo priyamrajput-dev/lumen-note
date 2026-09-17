@@ -8,9 +8,10 @@ import {
 import type { Source, SourceType, SourceStatus } from "@/types";
 import { AddSourceModal } from "./AddSourceModal";
 import { SourcePreviewDrawer } from "./SourcePreviewDrawer";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SearchInput } from "@/components/ui/SearchInput";
 import {
   Plus,
-  Search,
   FileUp,
   FileText,
   Globe,
@@ -48,6 +49,8 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [previewSource, setPreviewSource] = useState<Source | null>(null);
+  const [sourceToDelete, setSourceToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const allSelected =
     sources && sources.length > 0 && selectedIds.length === sources.length;
@@ -66,39 +69,34 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
     );
   };
 
-  const handleDeleteSingle = async (e: React.MouseEvent, sourceId: string, title: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm(`Delete source "${title}"?`)) {
-      try {
-        await deleteSourceMutation.mutateAsync(sourceId);
-        setSelectedIds((prev) => prev.filter((id) => id !== sourceId));
-        if (previewSource?.id === sourceId) {
-          setPreviewSource(null);
-        }
-      } catch (err) {
-        console.error("Failed to delete source:", err);
+  const handleConfirmSingleDelete = async () => {
+    if (!sourceToDelete) return;
+    const targetId = sourceToDelete.id;
+    try {
+      await deleteSourceMutation.mutateAsync(targetId);
+      setSelectedIds((prev) => prev.filter((id) => id !== targetId));
+      if (previewSource?.id === targetId) {
+        setPreviewSource(null);
       }
+    } catch (err) {
+      console.error("Failed to delete source:", err);
+    } finally {
+      setSourceToDelete(null);
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      window.confirm(
-        `Delete ${selectedIds.length} selected source${
-          selectedIds.length > 1 ? "s" : ""
-        }?`,
-      )
-    ) {
-      try {
-        await bulkDeleteMutation.mutateAsync({ sourceIds: selectedIds });
-        if (previewSource && selectedIds.includes(previewSource.id)) {
-          setPreviewSource(null);
-        }
-        setSelectedIds([]);
-      } catch (err) {
-        console.error("Failed to bulk delete sources:", err);
+  const handleConfirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      await bulkDeleteMutation.mutateAsync({ sourceIds: selectedIds });
+      if (previewSource && selectedIds.includes(previewSource.id)) {
+        setPreviewSource(null);
       }
+      setSelectedIds([]);
+    } catch (err) {
+      console.error("Failed to bulk delete sources:", err);
+    } finally {
+      setShowBulkDeleteConfirm(false);
     }
   };
 
@@ -168,13 +166,13 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
           {selectedIds.length > 0 && (
             <button
               type="button"
-              onClick={handleBulkDelete}
+              onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={bulkDeleteMutation.isPending}
-              className="inline-flex items-center gap-1 rounded-lg bg-error/10 border border-error/20 px-2 py-1 text-[10px] font-medium text-error hover:bg-error/20 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg bg-error/10 border border-error/20 px-2.5 py-1 text-[10px] font-medium text-error hover:bg-error/20 transition-colors cursor-pointer"
               title="Delete selected sources"
             >
               <Trash2 className="h-3 w-3" />
-              <span>{selectedIds.length}</span>
+              <span>Delete ({selectedIds.length})</span>
             </button>
           )}
 
@@ -190,17 +188,13 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="border-b border-border p-2 space-y-1.5 bg-surface/40 shrink-0">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted" />
-          <input
-            type="text"
-            placeholder="Filter sources..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface pl-7 pr-2.5 py-1 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
-          />
-        </div>
+      <div className="border-b border-border p-2 space-y-2 bg-surface/40 shrink-0">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Filter sources..."
+          className="w-full text-xs"
+        />
 
         <div className="flex items-center gap-1 text-[10px]">
           <select
@@ -349,7 +343,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteSingle(e, src.id, src.title);
+                              setSourceToDelete({ id: src.id, title: src.title });
                             }}
                             className="p-1 rounded text-muted hover:text-error hover:bg-error/10 cursor-pointer"
                             title="Delete source"
@@ -386,6 +380,32 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       <SourcePreviewDrawer
         source={previewSource}
         onClose={() => setPreviewSource(null)}
+      />
+
+      {/* Single Source Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(sourceToDelete)}
+        title="Delete Source"
+        description={`Are you sure you want to delete "${sourceToDelete?.title}"? All vectorized chunks and embeddings for this source will be permanently removed.`}
+        confirmLabel="Delete Source"
+        variant="danger"
+        isLoading={deleteSourceMutation.isPending}
+        onConfirm={handleConfirmSingleDelete}
+        onClose={() => setSourceToDelete(null)}
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showBulkDeleteConfirm}
+        title="Delete Selected Sources"
+        description={`Are you sure you want to delete ${selectedIds.length} selected source${
+          selectedIds.length > 1 ? "s" : ""
+        }? This operation cannot be undone.`}
+        confirmLabel={`Delete ${selectedIds.length} Sources`}
+        variant="danger"
+        isLoading={bulkDeleteMutation.isPending}
+        onConfirm={handleConfirmBulkDelete}
+        onClose={() => setShowBulkDeleteConfirm(false)}
       />
     </div>
   );

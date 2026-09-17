@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Source } from "@/types";
 import { useDeleteSource } from "@/api/sources";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   X,
   FileText,
@@ -41,6 +42,7 @@ export function SourcePreviewDrawer({
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [fontStyle, setFontStyle] = useState<FontStyle>("sans");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const shouldShow = isOpen !== undefined ? isOpen : Boolean(source);
 
@@ -58,18 +60,21 @@ export function SourcePreviewDrawer({
 
   const deleteMutation = useDeleteSource(source?.workspaceId || "");
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!source) return;
-    if (window.confirm(`Are you sure you want to delete source "${source.title}"?`)) {
-      setIsDeleting(true);
-      try {
-        await deleteMutation.mutateAsync(source.id);
-        onClose();
-      } catch (err) {
-        console.error("Failed to delete source:", err);
-      } finally {
-        setIsDeleting(false);
-      }
+    setIsDeleting(true);
+    try {
+      await deleteMutation.mutateAsync(source.id);
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete source:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -446,6 +451,17 @@ export function SourcePreviewDrawer({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Source"
+        description={`Are you sure you want to delete "${source?.title}"? All vectorized chunks and embeddings associated with this source will be removed.`}
+        confirmLabel="Delete Source"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 

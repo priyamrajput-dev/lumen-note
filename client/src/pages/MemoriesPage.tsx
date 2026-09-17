@@ -9,21 +9,24 @@ import {
 import type { AppMemory } from "@/types";
 import { getErrorMessage } from "@/api/client";
 import { Footer } from "@/components/layout/Footer";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   BrainCircuit,
   Plus,
   Trash2,
   Edit3,
-  Search,
   Loader2,
   Check,
   X,
   AlertCircle,
-  Sparkles,
+  Calendar,
 } from "lucide-react";
 
 export function MemoriesPage() {
-  const { data: memories, isLoading, isError } = useMemories();
+  const { data: memories, isLoading, isError, refetch } = useMemories();
   const createMutation = useCreateMemory();
   const updateMutation = useUpdateMemory();
   const deleteMutation = useDeleteMemory();
@@ -34,6 +37,7 @@ export function MemoriesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredMemories = memories?.filter((m) =>
     m.memory.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -71,9 +75,13 @@ export function MemoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Delete this memory rule?")) {
-      await deleteMutation.mutateAsync(id);
+  const handleDeleteConfirm = async () => {
+    if (!deletingId) return;
+    try {
+      await deleteMutation.mutateAsync(deletingId);
+      setDeletingId(null);
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -81,92 +89,110 @@ export function MemoriesPage() {
     <div className="min-h-[calc(100vh-3.5rem)] bg-background text-foreground transition-colors flex flex-col justify-between">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 w-full">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-border gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                Knowledge Memories & Guidelines
-              </h1>
-              <span className="text-xs font-mono font-medium rounded-full bg-surface-secondary text-muted border border-border px-2.5 py-0.5">
-                {memories?.length || 0}
-              </span>
-            </div>
-            <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
-              Lumen Note recalls your research habits, citation guidelines, and personal knowledge preferences across conversations.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsAddOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-accent-hover hover:shadow-accent-glow transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Guideline</span>
-          </button>
-        </div>
+        <PageHeader
+          title="Knowledge Memories & Guidelines"
+          description="Lumen Note recalls your research habits, citation guidelines, and personal knowledge preferences across conversations."
+          badge={memories?.length || 0}
+          actions={
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-accent-hover hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Guideline</span>
+            </button>
+          }
+        />
 
         {/* Error Banner */}
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-error/10 border border-error/25 p-3 text-xs text-error">
+          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-error/10 border border-error/25 p-3.5 text-xs text-error">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
+            <span className="flex-1">{error}</span>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="text-error/70 hover:text-error cursor-pointer p-0.5"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
 
         {/* Search Bar */}
         <div className="mt-6 flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted" />
-            <input
-              type="text"
-              placeholder="Search recalled memories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors shadow-2xs"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer p-0.5"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search recalled memories..."
+            className="flex-1 max-w-md"
+          />
         </div>
 
-        {/* Loading State */}
+        {/* Loading Skeletons */}
         {isLoading && (
           <div className="mt-6 space-y-3">
-            {[1, 2, 3].map((n) => (
+            {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="h-20 rounded-2xl border border-border/60 bg-surface animate-pulse"
-              />
+                className="h-24 rounded-2xl border border-border/60 bg-surface/60 animate-pulse p-4 flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-24 rounded bg-surface-secondary" />
+                  <div className="h-3 w-16 rounded bg-surface-secondary" />
+                </div>
+                <div className="space-y-1.5 mt-2">
+                  <div className="h-3 w-full rounded bg-surface-secondary/70" />
+                  <div className="h-3 w-3/4 rounded bg-surface-secondary/70" />
+                </div>
+              </div>
             ))}
+          </div>
+        )}
+
+        {/* Load Error State */}
+        {isError && (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-error/25 bg-error/5 p-8 text-center">
+            <AlertCircle className="h-8 w-8 text-error mb-2" />
+            <h3 className="text-sm font-semibold text-foreground">Failed to load memories</h3>
+            <p className="mt-1 text-xs text-muted max-w-sm">
+              We encountered an issue communicating with the backend.
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-4 rounded-xl border border-border bg-surface px-4 py-1.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !isError && memories?.length === 0 && (
-          <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-surface py-16 text-center shadow-xs">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent mb-4">
-              <BrainCircuit className="h-7 w-7" />
-            </div>
-            <h4 className="text-base font-bold text-foreground">No memories recorded yet</h4>
-            <p className="mt-1.5 max-w-xs text-xs text-foreground-secondary leading-relaxed">
-              Guidelines are automatically extracted from your research chats, or you can add custom rules here.
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsAddOpen(true)}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-semibold text-white hover:bg-accent-hover shadow-md hover:shadow-accent-glow transition-all cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add First Guideline</span>
-            </button>
+          <div className="mt-10">
+            <EmptyState
+              icon={<BrainCircuit className="h-6 w-6" />}
+              title="No memories recorded yet"
+              description="Guidelines are automatically extracted from your research chats, or you can add custom rules here."
+              actionLabel="Add First Guideline"
+              actionIcon={<Plus className="h-4 w-4" />}
+              onAction={() => setIsAddOpen(true)}
+            />
+          </div>
+        )}
+
+        {/* Empty Search Results */}
+        {!isLoading && !isError && memories && memories.length > 0 && filteredMemories?.length === 0 && (
+          <div className="mt-10">
+            <EmptyState
+              icon={<BrainCircuit className="h-6 w-6" />}
+              title="No matching memories found"
+              description={`No guidelines matched "${searchQuery}".`}
+              actionLabel="Clear Search"
+              onAction={() => setSearchQuery("")}
+            />
           </div>
         )}
 
@@ -179,10 +205,10 @@ export function MemoriesPage() {
               return (
                 <div
                   key={mem.id}
-                  className={`group relative rounded-2xl border bg-surface p-4 sm:p-5 transition-all shadow-xs ${
+                  className={`group relative rounded-2xl border bg-surface p-4 sm:p-5 transition-all shadow-2xs ${
                     isEditing
-                      ? "border-accent/50 ring-1 ring-accent/20 shadow-md"
-                      : "border-border card-hover"
+                      ? "border-accent/60 ring-2 ring-accent/15 shadow-sm"
+                      : "border-border/80 card-hover"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -197,7 +223,8 @@ export function MemoriesPage() {
                         >
                           {mem.source === "learned" ? "AI Learned" : "Manual Preference"}
                         </span>
-                        <span className="text-[11px] font-mono text-muted">
+                        <span className="flex items-center gap-1 text-[11px] font-mono text-muted">
+                          <Calendar className="h-3 w-3" />
                           {new Date(mem.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -205,11 +232,11 @@ export function MemoriesPage() {
                       {isEditing ? (
                         <div className="mt-2 space-y-3">
                           <textarea
-                            rows={5}
+                            rows={4}
                             value={editingText}
                             onChange={(e) => setEditingText(e.target.value)}
                             placeholder="Edit guideline text..."
-                            className="w-full min-h-[130px] rounded-xl border border-accent/70 bg-surface-secondary/40 p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all leading-relaxed resize-y"
+                            className="w-full rounded-xl border border-accent/70 bg-surface-secondary/40 p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted subtle-focus transition-all leading-relaxed resize-y"
                             autoFocus
                           />
                           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -221,7 +248,7 @@ export function MemoriesPage() {
                                 type="button"
                                 onClick={() => setEditingId(null)}
                                 disabled={updateMutation.isPending}
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
                               >
                                 <X className="h-3.5 w-3.5" />
                                 <span>Cancel</span>
@@ -230,7 +257,7 @@ export function MemoriesPage() {
                                 type="button"
                                 onClick={() => handleSaveEdit(mem.id)}
                                 disabled={updateMutation.isPending || !editingText.trim()}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer shadow-2xs"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
                               >
                                 {updateMutation.isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -256,14 +283,16 @@ export function MemoriesPage() {
                           onClick={() => handleStartEdit(mem)}
                           className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent-subtle/50 transition-colors cursor-pointer border border-transparent hover:border-accent/20"
                           title="Edit guideline"
+                          aria-label="Edit guideline"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(mem.id)}
+                          onClick={() => setDeletingId(mem.id)}
                           className="p-1.5 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-colors cursor-pointer border border-transparent hover:border-error/20"
                           title="Delete guideline"
+                          aria-label="Delete guideline"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -280,18 +309,28 @@ export function MemoriesPage() {
       {/* Add Memory Modal */}
       {isAddOpen &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-            <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between pb-3.5 border-b border-border">
-                <h3 className="text-base font-bold text-foreground">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-memory-title"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+              onClick={() => setIsAddOpen(false)}
+            />
+            <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
+                <h3 id="add-memory-title" className="text-base font-bold text-foreground tracking-tight">
                   Add Knowledge Guideline
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="p-1 text-muted hover:text-foreground rounded-lg hover:bg-surface-secondary cursor-pointer"
+                  className="p-1 text-muted hover:text-foreground rounded-lg hover:bg-surface-secondary cursor-pointer transition-colors"
+                  aria-label="Close dialog"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
@@ -306,22 +345,23 @@ export function MemoriesPage() {
                     placeholder="e.g. Always format equations in LaTeX. Focus on practical implementation details in Python."
                     value={newMemoryText}
                     onChange={(e) => setNewMemoryText(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none resize-none transition-colors shadow-2xs"
+                    className="w-full rounded-xl border border-border/80 bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted subtle-focus resize-none transition-colors shadow-2xs"
+                    autoFocus
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-border/60">
                   <button
                     type="button"
                     onClick={() => setIsAddOpen(false)}
-                    className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                    className="rounded-xl border border-border/80 bg-surface px-4 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createMutation.isPending || !newMemoryText.trim()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-md hover:shadow-accent-glow cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-all shadow-xs hover:shadow-accent-glow cursor-pointer"
                   >
                     {createMutation.isPending && (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -334,6 +374,18 @@ export function MemoriesPage() {
           </div>,
           document.body
         )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={Boolean(deletingId)}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Guideline?"
+        description="Are you sure you want to delete this memory guideline? Lumen Note will no longer apply this rule in research chats."
+        confirmText="Delete Guideline"
+        isDestructive={true}
+        isLoading={deleteMutation.isPending}
+      />
 
       <Footer />
     </div>

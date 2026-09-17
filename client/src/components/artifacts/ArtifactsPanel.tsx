@@ -3,6 +3,7 @@ import { useArtifacts, useDeleteArtifact } from "@/api/artifacts";
 import type { LearningArtifact, ArtifactType, ArtifactStatus } from "@/types";
 import { GenerateArtifactModal } from "./GenerateArtifactModal";
 import { ArtifactDetailModal } from "./ArtifactDetailModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   Plus,
   Sparkles,
@@ -30,6 +31,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState<LearningArtifact | null>(null);
   const [filterType, setFilterType] = useState<string>("ALL");
+  const [artifactToDelete, setArtifactToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const filteredArtifacts = artifacts?.filter((art) => {
     if (filterType === "ALL") return true;
@@ -38,13 +40,16 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
     return true;
   });
 
-  const handleDelete = async (e: React.MouseEvent, artifactId: string, title: string) => {
-    e.stopPropagation();
-    if (window.confirm(`Delete artifact "${title}"?`)) {
-      await deleteMutation.mutateAsync(artifactId);
-      if (selectedArtifact?.id === artifactId) {
+  const handleConfirmDelete = async () => {
+    if (!artifactToDelete) return;
+    const targetId = artifactToDelete.id;
+    try {
+      await deleteMutation.mutateAsync(targetId);
+      if (selectedArtifact?.id === targetId) {
         setSelectedArtifact(null);
       }
+    } finally {
+      setArtifactToDelete(null);
     }
   };
 
@@ -235,7 +240,10 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
 
                     <button
                       type="button"
-                      onClick={(e) => handleDelete(e, art.id, art.title)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setArtifactToDelete({ id: art.id, title: art.title });
+                      }}
                       className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer"
                       title="Delete artifact"
                     >
@@ -275,6 +283,18 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
       <ArtifactDetailModal
         artifact={selectedArtifact}
         onClose={() => setSelectedArtifact(null)}
+      />
+
+      {/* Delete Artifact Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(artifactToDelete)}
+        title="Delete Artifact"
+        description={`Are you sure you want to delete "${artifactToDelete?.title}"? This study tool or summary will be permanently removed.`}
+        confirmLabel="Delete Artifact"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setArtifactToDelete(null)}
       />
     </div>
   );
