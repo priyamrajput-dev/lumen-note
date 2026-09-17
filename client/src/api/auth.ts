@@ -30,12 +30,16 @@ export function exitDemoMode(): void {
     localStorage.removeItem("lumen_demo_workspaces");
     localStorage.removeItem("lumen_demo_sources");
     localStorage.removeItem("lumen_demo_memories");
+    localStorage.removeItem("lumen_auth_token");
   }
 }
 
 export async function fetchSession(): Promise<AuthSessionResponse | null> {
   try {
     const res = await apiClient.get<AuthSessionResponse | null>("/auth/get-session");
+    if (res.data?.session?.token && typeof window !== "undefined") {
+      localStorage.setItem("lumen_auth_token", res.data.session.token);
+    }
     return res.data;
   } catch (err) {
     return null;
@@ -57,6 +61,9 @@ export function useSignOut() {
   return useMutation({
     mutationFn: async () => {
       exitDemoMode();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lumen_auth_token");
+      }
       try {
         await authClient.signOut();
       } catch (e) {
@@ -65,6 +72,9 @@ export function useSignOut() {
     },
     onSuccess: () => {
       exitDemoMode();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lumen_auth_token");
+      }
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
       queryClient.clear();
       window.location.href = "/login";

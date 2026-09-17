@@ -35,6 +35,7 @@ export function createApplication(): Express {
         return callback(new Error("Not allowed by CORS"), false);
       },
       credentials: true,
+      exposedHeaders: ["set-auth-token"],
     }),
   );
 

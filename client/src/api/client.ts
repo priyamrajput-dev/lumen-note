@@ -16,6 +16,24 @@ export const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("lumen_auth_token");
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use((response) => {
+  const token = response.headers["set-auth-token"];
+  if (token && typeof window !== "undefined") {
+    localStorage.setItem("lumen_auth_token", token);
+  }
+  return response;
+});
+
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const axiosErr = error as AxiosError<ApiErrorResponse>;

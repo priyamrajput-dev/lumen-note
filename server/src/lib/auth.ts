@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { bearer } from "better-auth/plugins";
 import { db } from "../db/index.js";
 import * as schema from "../db/schema.js";
 import { env } from "../common/config/env.js";
@@ -13,13 +14,16 @@ export const auth = betterAuth({
     clientURL,
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://*.vercel.app",
   ].filter(Boolean),
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
       secure: true,
+      partitioned: true,
     },
   },
+  plugins: [bearer()],
 
   database: drizzleAdapter(db, {
     provider: "pg",

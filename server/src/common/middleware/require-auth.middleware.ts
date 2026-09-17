@@ -6,15 +6,23 @@ import { session as sessionTable, user as userTable } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 
 function extractTokenFromRequest(req: Request): string | null {
-  if (req.headers.authorization?.startsWith("Bearer ")) {
-    return req.headers.authorization.slice(7).trim();
+  const authHeader = req.headers.authorization;
+  if (authHeader?.toLowerCase().startsWith("bearer ")) {
+    const token = authHeader.slice(7).trim();
+    if (token) return token;
   }
   const cookieHeader = req.headers.cookie;
   if (cookieHeader) {
-    const match = cookieHeader.match(/(?:better-auth\.session_token|__Secure-better-auth\.session_token|session_token)=([^;]+)/);
+    const match = cookieHeader.match(
+      /(?:__Secure-better-auth\.session_token|better-auth\.session_token|session_token)=([^;]+)/,
+    );
     if (match) {
-      const raw = decodeURIComponent(match[1].trim());
-      return raw.split(".")[0];
+      let raw = decodeURIComponent(match[1].trim());
+      if (raw.startsWith('"') && raw.endsWith('"')) {
+        raw = raw.slice(1, -1);
+      }
+      const lastDot = raw.lastIndexOf(".");
+      return lastDot > 0 ? raw.slice(0, lastDot) : raw;
     }
   }
   return null;
