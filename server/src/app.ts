@@ -14,9 +14,27 @@ import { functions } from "./inngest/index.js";
 export function createApplication(): Express {
   const app = express();
 
+  const allowedOrigins = [
+    env.CLIENT_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://lumen-note-priyamrajput00s-projects.vercel.app",
+    "https://lumen-note-dun.vercel.app",
+  ].filter(Boolean);
+
   app.use(
     cors({
-      origin: env.CLIENT_URL,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.endsWith(".vercel.app") ||
+          origin === env.CLIENT_URL
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
     }),
   );

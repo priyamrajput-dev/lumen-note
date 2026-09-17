@@ -9,7 +9,19 @@ const clientURL = env.CLIENT_URL;
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [clientURL],
+  trustedOrigins: [
+    clientURL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://lumen-note-priyamrajput00s-projects.vercel.app",
+    "https://lumen-note-dun.vercel.app",
+  ].filter(Boolean),
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
 
   database: drizzleAdapter(db, {
     provider: "pg",
