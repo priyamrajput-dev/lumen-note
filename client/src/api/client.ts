@@ -1,8 +1,15 @@
 import axios, { type AxiosError } from "axios";
 import type { ApiErrorResponse } from "@/types";
 
+const getApiBaseUrl = (): string => {
+  if (import.meta.env.VITE_SERVER_URL) {
+    return `${import.meta.env.VITE_SERVER_URL.replace(/\/+$/, "")}/api`;
+  }
+  return import.meta.env.VITE_API_URL || "/api";
+};
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

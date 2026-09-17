@@ -4,6 +4,9 @@ import { apiClient } from "./client";
 import type { AuthSessionResponse } from "@/types";
 
 const getAuthBaseUrl = (): string => {
+  if (import.meta.env.VITE_SERVER_URL) {
+    return import.meta.env.VITE_SERVER_URL.replace(/\/+$/, "");
+  }
   const apiUrl = import.meta.env.VITE_API_URL;
   if (apiUrl && apiUrl.startsWith("http")) {
     return apiUrl.replace(/\/api\/?$/, "");
