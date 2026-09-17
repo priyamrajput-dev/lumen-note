@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useUpdateWorkspace, useDeleteWorkspace } from "@/api/workspaces";
 import { getErrorMessage } from "@/api/client";
 import type { Workspace, ChatModel } from "@/types";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { X, Settings, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 interface WorkspaceSettingsModalProps {
@@ -25,6 +26,7 @@ export function WorkspaceSettingsModal({
   const [icon, setIcon] = useState("🧠");
   const [defaultModel, setDefaultModel] = useState<ChatModel>("gpt-4o-mini");
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const updateMutation = useUpdateWorkspace();
   const deleteMutation = useDeleteWorkspace();
@@ -64,19 +66,14 @@ export function WorkspaceSettingsModal({
     }
   };
 
-  const handleDelete = async () => {
-    if (
-      window.confirm(
-        `Are you completely sure you want to delete "${workspace.title}"? This cannot be undone.`,
-      )
-    ) {
-      try {
-        await deleteMutation.mutateAsync(workspace.id);
-        onClose();
-        onDeleted?.();
-      } catch (err) {
-        setError(getErrorMessage(err));
-      }
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(workspace.id);
+      setShowDeleteConfirm(false);
+      onClose();
+      onDeleted?.();
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -192,7 +189,7 @@ export function WorkspaceSettingsModal({
           <div className="flex items-center justify-between pt-3.5 border-t border-border">
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleteMutation.isPending}
               className="inline-flex items-center gap-1.5 text-xs text-error hover:opacity-80 transition-opacity cursor-pointer"
             >
@@ -204,7 +201,7 @@ export function WorkspaceSettingsModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground"
+                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
               >
                 Cancel
               </button>
@@ -221,6 +218,17 @@ export function WorkspaceSettingsModal({
             </div>
           </div>
         </form>
+
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          title="Delete Workspace"
+          description={`Are you completely sure you want to delete "${workspace.title}"? All sources, vectors, chat sessions, and notes within it will be permanently deleted.`}
+          confirmLabel="Delete Workspace"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
       </div>
     </div>,
     document.body

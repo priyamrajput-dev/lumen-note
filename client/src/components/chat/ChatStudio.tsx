@@ -11,6 +11,7 @@ import type { ChatModel, Source } from "@/types";
 import { CitationsPopover } from "./CitationsPopover";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { SourcePreviewDrawer } from "@/components/sources/SourcePreviewDrawer";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   Sparkles,
   Plus,
@@ -27,6 +28,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Square,
+  CornerDownLeft,
 } from "lucide-react";
 
 interface ChatStudioProps {
@@ -41,6 +43,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showConvSidebar, setShowConvSidebar] = useState(false);
+  const [convToDelete, setConvToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Model & search settings
   const [selectedModel, setSelectedModel] = useState<ChatModel>(defaultModel);
@@ -90,13 +93,16 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
     setActiveConversationId(newConv.id);
   };
 
-  const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
-    e.stopPropagation();
-    if (window.confirm("Delete this conversation history?")) {
-      await deleteConversationMutation.mutateAsync(convId);
-      if (activeConversationId === convId) {
+  const handleConfirmDeleteConversation = async () => {
+    if (!convToDelete) return;
+    const targetId = convToDelete.id;
+    try {
+      await deleteConversationMutation.mutateAsync(targetId);
+      if (activeConversationId === targetId) {
         setActiveConversationId(null);
       }
+    } finally {
+      setConvToDelete(null);
     }
   };
 
@@ -209,8 +215,12 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                     </span>
                     <button
                       type="button"
-                      onClick={(e) => handleDeleteConversation(e, conv.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConvToDelete({ id: conv.id, title: conv.title || "Untitled Chat" });
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error hover:bg-error/10 rounded-md transition-all cursor-pointer"
+                      title="Delete chat session"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -446,7 +456,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
         <div className="border-t border-border p-3 sm:p-4 bg-surface/90 shrink-0">
           <form
             onSubmit={handleSendMessage}
-            className="max-w-3xl mx-auto relative rounded-2xl border border-border bg-surface-secondary/30 p-2 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all shadow-2xs"
+            className="max-w-3xl mx-auto relative rounded-2xl border border-border bg-surface-secondary/40 p-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all shadow-2xs"
           >
             <textarea
               rows={2}
@@ -465,6 +475,9 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
             <div className="flex items-center justify-between pt-1 px-2">
               <div className="flex items-center gap-2 text-[10px] font-mono text-muted">
                 <span className="hidden sm:inline">Grounded in workspace sources</span>
+                <span className="hidden sm:inline-flex items-center gap-1 rounded bg-surface-secondary px-1.5 py-0.5 text-[9px] border border-border">
+                  <CornerDownLeft className="h-2.5 w-2.5" /> Enter
+                </span>
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -472,7 +485,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                   <button
                     type="button"
                     onClick={handleStopStreaming}
-                    className="inline-flex items-center gap-1 rounded-xl bg-error/10 border border-error/30 text-error px-2.5 py-1 text-xs font-semibold hover:bg-error/20 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded-xl bg-error/10 border border-error/30 text-error px-3 py-1 text-xs font-semibold hover:bg-error/20 transition-colors cursor-pointer"
                   >
                     <Square className="h-3 w-3 fill-current" />
                     <span>Stop</span>
@@ -481,7 +494,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                   <button
                     type="submit"
                     disabled={!inputMessage.trim() || isStreaming}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-white hover:bg-accent-hover disabled:opacity-40 transition-colors shadow-2xs cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-white hover:bg-accent-hover disabled:opacity-40 disabled:hover:bg-accent transition-all shadow-2xs cursor-pointer"
                     title="Send message"
                   >
                     <Send className="h-3.5 w-3.5" />
@@ -499,6 +512,18 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
         isOpen={Boolean(inspectSourceId)}
         isLoading={isInspectingSource && !inspectedSource}
         onClose={() => setInspectSourceId(null)}
+      />
+
+      {/* Confirm Delete Conversation Modal */}
+      <ConfirmDialog
+        isOpen={Boolean(convToDelete)}
+        title="Delete Conversation"
+        description={`Are you sure you want to delete "${convToDelete?.title}"? All messages in this thread will be permanently removed.`}
+        confirmLabel="Delete Conversation"
+        variant="danger"
+        isLoading={deleteConversationMutation.isPending}
+        onConfirm={handleConfirmDeleteConversation}
+        onClose={() => setConvToDelete(null)}
       />
     </div>
   );
