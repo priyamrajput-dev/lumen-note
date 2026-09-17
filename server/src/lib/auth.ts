@@ -22,6 +22,25 @@ export const auth = betterAuth({
       secure: true,
       partitioned: true,
     },
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: "lax",
+          secure: true,
+          partitioned: false,
+        },
+      },
+      oauth_state: {
+        attributes: {
+          sameSite: "lax",
+          secure: true,
+          partitioned: false,
+        },
+      },
+    },
+    ipAddress: {
+      ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+    },
   },
   plugins: [bearer()],
 
