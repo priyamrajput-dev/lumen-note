@@ -41,8 +41,13 @@ export function createApplication(): Express {
 
   app.use(express.json());
 
-  app.get(["/", "/health"], (_req, res) => {
-    res.status(200).json({ status: "ok", message: "Lumen Note API is running" });
+  app.get(["/", "/health", "/api/health"], (_req, res) => {
+    res.status(200).json({
+      status: "ok",
+      message: "Lumen Note API is running",
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime()),
+    });
   });
 
   app.get("/favicon.ico", (_req, res) => {
