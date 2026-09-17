@@ -5,11 +5,21 @@ import { db } from "../../db/index.js";
 import { session as sessionTable, user as userTable } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 
-function extractTokenFromRequest(req: Request): string | null {
+function extractTokensFromRequest(req: Request): string[] {
+  const tokens: string[] = [];
   const authHeader = req.headers.authorization;
   if (authHeader?.toLowerCase().startsWith("bearer ")) {
-    const token = authHeader.slice(7).trim();
-    if (token) return token;
+    let token = authHeader.slice(7).trim();
+    if (token.startsWith('"') && token.endsWith('"')) {
+      token = token.slice(1, -1);
+    }
+    if (token) {
+      tokens.push(token);
+      const lastDot = token.lastIndexOf(".");
+      if (lastDot > 0) {
+        tokens.push(token.slice(0, lastDot));
+      }
+    }
   }
   const cookieHeader = req.headers.cookie;
   if (cookieHeader) {
@@ -21,11 +31,14 @@ function extractTokenFromRequest(req: Request): string | null {
       if (raw.startsWith('"') && raw.endsWith('"')) {
         raw = raw.slice(1, -1);
       }
+      tokens.push(raw);
       const lastDot = raw.lastIndexOf(".");
-      return lastDot > 0 ? raw.slice(0, lastDot) : raw;
+      if (lastDot > 0) {
+        tokens.push(raw.slice(0, lastDot));
+      }
     }
   }
-  return null;
+  return [...new Set(tokens.filter(Boolean))];
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -41,8 +54,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
   // Fallback if Better Auth helper did not parse the session but token is in cookie or header
   if (!session?.user) {
-    const token = extractTokenFromRequest(req);
-    if (token) {
+    const tokens = extractTokensFromRequest(req);
+    for (const token of tokens) {
       const [foundSession] = await db
         .select()
         .from(sessionTable)
@@ -59,6 +72,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
             session: foundSession,
             user: foundUser,
           };
+          break;
         }
       }
     }

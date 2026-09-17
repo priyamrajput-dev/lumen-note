@@ -34,7 +34,31 @@ export function exitDemoMode(): void {
   }
 }
 
+export function syncTokenFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      localStorage.setItem("lumen_auth_token", token);
+      params.delete("token");
+      const newSearch = params.toString() ? `?${params.toString()}` : "";
+      const cleanUrl = `${window.location.pathname}${newSearch}${window.location.hash}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+      return token;
+    }
+    return localStorage.getItem("lumen_auth_token");
+  } catch {
+    return null;
+  }
+}
+
+if (typeof window !== "undefined") {
+  syncTokenFromUrl();
+}
+
 export async function fetchSession(): Promise<AuthSessionResponse | null> {
+  syncTokenFromUrl();
   try {
     const res = await apiClient.get<AuthSessionResponse | null>("/auth/get-session");
     if (res.data?.session?.token && typeof window !== "undefined") {
