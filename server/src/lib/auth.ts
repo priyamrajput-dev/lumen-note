@@ -13,8 +13,6 @@ export const auth = betterAuth({
     clientURL,
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://lumen-note-priyamrajput00s-projects.vercel.app",
-    "https://lumen-note-dun.vercel.app",
   ].filter(Boolean),
   advanced: {
     defaultCookieAttributes: {

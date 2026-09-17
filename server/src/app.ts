@@ -18,8 +18,6 @@ export function createApplication(): Express {
     env.CLIENT_URL,
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://lumen-note-priyamrajput00s-projects.vercel.app",
-    "https://lumen-note-dun.vercel.app",
   ].filter(Boolean);
 
   app.use(
@@ -28,12 +26,11 @@ export function createApplication(): Express {
         if (!origin) return callback(null, true);
         if (
           allowedOrigins.includes(origin) ||
-          origin.endsWith(".vercel.app") ||
-          origin === env.CLIENT_URL
+          origin.endsWith(".vercel.app")
         ) {
           return callback(null, true);
         }
-        return callback(null, true);
+        return callback(new Error("Not allowed by CORS"), false);
       },
       credentials: true,
     }),
@@ -41,7 +38,7 @@ export function createApplication(): Express {
 
   app.use(express.json());
 
-  app.get(["/", "/health"], (req, res) => {
+  app.get(["/", "/health"], (_req, res) => {
     res.status(200).json({ status: "ok", message: "Lumen Note API is running" });
   });
 

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: lumen-note-server
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: server
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
