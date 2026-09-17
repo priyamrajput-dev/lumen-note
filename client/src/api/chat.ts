@@ -323,11 +323,20 @@ export async function streamChat({
     }));
 
     const baseUrl = apiClient.defaults.baseURL || "/api";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("lumen_auth_token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
     const response = await fetch(`${baseUrl}/workspaces/${workspaceId}/chat`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       credentials: "include",
       body: JSON.stringify({
         conversationId: conversationId || undefined,
@@ -337,6 +346,11 @@ export async function streamChat({
       }),
       signal,
     });
+
+    const setAuthToken = response.headers.get("set-auth-token");
+    if (setAuthToken && typeof window !== "undefined") {
+      localStorage.setItem("lumen_auth_token", setAuthToken);
+    }
 
     if (!response.ok) {
       let errMessage = `Chat request failed (${response.status})`;
