@@ -42,6 +42,10 @@ export function createApplication(): Express {
     res.status(200).json({ status: "ok", message: "Lumen Note API is running" });
   });
 
+  app.get("/favicon.ico", (_req, res) => {
+    res.status(204).end();
+  });
+
   app.all("/api/auth/{*any}", toNodeHandler(auth));
 
   // inngest background jobs endpoint
