@@ -73,13 +73,22 @@ async function extractSourceText(source: SourceRecord) {
     };
   }
 
-  if (source.type === "YOUTUBE" && source.url) {
-    const extracted = await fetchYoutubeTranscript(source.url);
-    return {
-      text: extracted.content,
-      pageCount: undefined,
-      pages: undefined,
-    };
+  if (source.type === "YOUTUBE") {
+    if (source.content && source.content.trim().length > 0) {
+      return {
+        text: source.content,
+        pageCount: undefined,
+        pages: undefined,
+      };
+    }
+    if (source.url) {
+      const extracted = await fetchYoutubeTranscript(source.url);
+      return {
+        text: extracted.content,
+        pageCount: undefined,
+        pages: undefined,
+      };
+    }
   }
 
   if (source.type === "WEBSITE" && source.url) {
