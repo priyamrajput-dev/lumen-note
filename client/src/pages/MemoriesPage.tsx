@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   useMemories,
@@ -23,6 +23,7 @@ import {
   X,
   AlertCircle,
   Calendar,
+  RotateCcw,
 } from "lucide-react";
 
 export function MemoriesPage() {
@@ -38,6 +39,19 @@ export function MemoriesPage() {
   const [editingText, setEditingText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAddOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !createMutation.isPending) {
+        setIsAddOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAddOpen, createMutation.isPending]);
 
   const filteredMemories = memories?.filter((m) =>
     m.memory.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -86,8 +100,8 @@ export function MemoriesPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background text-foreground transition-colors flex flex-col justify-between">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 w-full">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground transition-colors flex flex-col justify-between">
+      <main className="page-container py-6 sm:py-8 max-w-4xl w-full flex-1">
         {/* Header */}
         <PageHeader
           title="Knowledge Memories & Guidelines"
@@ -97,7 +111,7 @@ export function MemoriesPage() {
             <button
               type="button"
               onClick={() => setIsAddOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-accent-hover hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer subtle-focus"
             >
               <Plus className="h-4 w-4" />
               <span>Add Guideline</span>
@@ -107,13 +121,14 @@ export function MemoriesPage() {
 
         {/* Error Banner */}
         {error && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-error/10 border border-error/25 p-3.5 text-xs text-error">
+          <div className="mt-4 flex items-center gap-2.5 rounded-lg bg-error/10 border border-error/25 p-3.5 text-xs text-error">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span className="flex-1">{error}</span>
             <button
               type="button"
               onClick={() => setError(null)}
-              className="text-error/70 hover:text-error cursor-pointer p-0.5"
+              className="text-error/70 hover:text-error cursor-pointer p-0.5 subtle-focus rounded"
+              aria-label="Dismiss error"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -126,7 +141,7 @@ export function MemoriesPage() {
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search recalled memories..."
-            className="flex-1 max-w-md"
+            className="w-full sm:max-w-md"
           />
         </div>
 
@@ -136,7 +151,7 @@ export function MemoriesPage() {
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="h-24 rounded-2xl border border-border/60 bg-surface/60 animate-pulse p-4 flex flex-col justify-between"
+                className="h-24 rounded-xl border border-border/60 bg-surface/50 animate-pulse p-4 flex flex-col justify-between shadow-2xs"
               >
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-24 rounded bg-surface-secondary" />
@@ -153,18 +168,19 @@ export function MemoriesPage() {
 
         {/* Load Error State */}
         {isError && (
-          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-error/25 bg-error/5 p-8 text-center">
+          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-error/25 bg-error/5 p-8 text-center">
             <AlertCircle className="h-8 w-8 text-error mb-2" />
             <h3 className="text-sm font-semibold text-foreground">Failed to load memories</h3>
-            <p className="mt-1 text-xs text-muted max-w-sm">
+            <p className="mt-1 text-xs text-foreground-secondary max-w-sm">
               We encountered an issue communicating with the backend.
             </p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-4 rounded-xl border border-border bg-surface px-4 py-1.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
             >
-              Try Again
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Try Again</span>
             </button>
           </div>
         )}
@@ -205,7 +221,7 @@ export function MemoriesPage() {
               return (
                 <div
                   key={mem.id}
-                  className={`group relative rounded-2xl border bg-surface p-4 sm:p-5 transition-all shadow-2xs ${
+                  className={`group relative rounded-xl border bg-surface p-4 sm:p-5 transition-all shadow-2xs ${
                     isEditing
                       ? "border-accent/60 ring-2 ring-accent/15 shadow-sm"
                       : "border-border/80 card-hover"
@@ -217,7 +233,7 @@ export function MemoriesPage() {
                         <span
                           className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
                             mem.source === "learned"
-                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                              ? "bg-surface-secondary text-foreground-secondary border border-border/80"
                               : "bg-accent-subtle text-accent border border-accent/20"
                           }`}
                         >
@@ -236,7 +252,7 @@ export function MemoriesPage() {
                             value={editingText}
                             onChange={(e) => setEditingText(e.target.value)}
                             placeholder="Edit guideline text..."
-                            className="w-full rounded-xl border border-accent/70 bg-surface-secondary/40 p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted subtle-focus transition-all leading-relaxed resize-y"
+                            className="w-full rounded-lg border border-accent/70 bg-surface-secondary/40 p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted subtle-focus transition-all leading-relaxed resize-y"
                             autoFocus
                           />
                           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -248,7 +264,7 @@ export function MemoriesPage() {
                                 type="button"
                                 onClick={() => setEditingId(null)}
                                 disabled={updateMutation.isPending}
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1.5 h-8 rounded-lg border border-border/80 bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
                               >
                                 <X className="h-3.5 w-3.5" />
                                 <span>Cancel</span>
@@ -257,7 +273,7 @@ export function MemoriesPage() {
                                 type="button"
                                 onClick={() => handleSaveEdit(mem.id)}
                                 disabled={updateMutation.isPending || !editingText.trim()}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
+                                className="inline-flex items-center gap-1.5 h-8 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all cursor-pointer shadow-xs subtle-focus"
                               >
                                 {updateMutation.isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -281,7 +297,7 @@ export function MemoriesPage() {
                         <button
                           type="button"
                           onClick={() => handleStartEdit(mem)}
-                          className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent-subtle/50 transition-colors cursor-pointer border border-transparent hover:border-accent/20"
+                          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-accent hover:bg-accent-subtle/50 transition-colors cursor-pointer border border-transparent hover:border-accent/20 subtle-focus"
                           title="Edit guideline"
                           aria-label="Edit guideline"
                         >
@@ -290,7 +306,7 @@ export function MemoriesPage() {
                         <button
                           type="button"
                           onClick={() => setDeletingId(mem.id)}
-                          className="p-1.5 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-colors cursor-pointer border border-transparent hover:border-error/20"
+                          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-colors cursor-pointer border border-transparent hover:border-error/20 subtle-focus"
                           title="Delete guideline"
                           aria-label="Delete guideline"
                         >
@@ -304,7 +320,7 @@ export function MemoriesPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
 
       {/* Add Memory Modal */}
       {isAddOpen &&
@@ -321,13 +337,13 @@ export function MemoriesPage() {
             />
             <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
-                <h3 id="add-memory-title" className="text-base font-bold text-foreground tracking-tight">
+                <h3 id="add-memory-title" className="fluid-h3 text-foreground tracking-tight">
                   Add Knowledge Guideline
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="p-1 text-muted hover:text-foreground rounded-lg hover:bg-surface-secondary cursor-pointer transition-colors"
+                  className="flex items-center justify-center h-8 w-8 text-muted hover:text-foreground rounded-lg hover:bg-surface-secondary cursor-pointer transition-colors subtle-focus"
                   aria-label="Close dialog"
                 >
                   <X className="h-4 w-4" />
@@ -336,32 +352,33 @@ export function MemoriesPage() {
 
               <form onSubmit={handleCreate} className="mt-4 space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-foreground mb-1.5">
+                  <label htmlFor="guideline-text" className="block text-xs font-semibold text-foreground mb-1.5">
                     Guideline or Preference <span className="text-accent">*</span>
                   </label>
                   <textarea
+                    id="guideline-text"
                     rows={4}
                     required
                     placeholder="e.g. Always format equations in LaTeX. Focus on practical implementation details in Python."
                     value={newMemoryText}
                     onChange={(e) => setNewMemoryText(e.target.value)}
-                    className="w-full rounded-xl border border-border/80 bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted subtle-focus resize-none transition-colors shadow-2xs"
+                    className="w-full rounded-lg border border-border/80 bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted subtle-focus resize-none transition-colors shadow-2xs"
                     autoFocus
                   />
                 </div>
 
-                <div className="flex justify-end gap-2.5 pt-3 border-t border-border/60">
+                <div className="flex justify-end gap-2.5 pt-4 border-t border-border/70">
                   <button
                     type="button"
                     onClick={() => setIsAddOpen(false)}
-                    className="rounded-xl border border-border/80 bg-surface px-4 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+                    className="h-9 rounded-lg border border-border/80 bg-surface px-4 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={createMutation.isPending || !newMemoryText.trim()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-all shadow-xs hover:shadow-accent-glow cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all shadow-xs hover:shadow-accent-glow cursor-pointer subtle-focus"
                   >
                     {createMutation.isPending && (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />

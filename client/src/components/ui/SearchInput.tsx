@@ -30,14 +30,14 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-xl border border-border/80 bg-surface pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted transition-colors subtle-focus shadow-2xs hover:border-border"
+        className="w-full h-9 rounded-lg border border-border/80 bg-surface pl-9 pr-9 text-xs text-foreground placeholder:text-muted transition-colors subtle-focus shadow-2xs hover:border-border"
         aria-label={placeholder}
       />
       {value ? (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-muted hover:text-foreground transition-colors cursor-pointer"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
           aria-label="Clear search"
         >
           <X className="h-3.5 w-3.5" />

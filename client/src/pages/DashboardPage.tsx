@@ -14,9 +14,9 @@ import {
   Trash2,
   Calendar,
   ArrowUpRight,
-  Loader2,
   Cpu,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 
 export function DashboardPage() {
@@ -51,18 +51,18 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background text-foreground transition-colors flex flex-col justify-between">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground transition-colors flex flex-col justify-between">
+      <main className="page-container py-6 sm:py-8 w-full flex-1">
         {/* Page Header */}
         <PageHeader
           title="Research Workspaces"
-          description={`Welcome, ${session?.user?.name || "Researcher"}. Open an existing notebook or start a new investigation.`}
+          description={`Welcome, ${session?.user?.name || "Researcher"}. Open an existing investigation or create a new grounded notebook.`}
           badge={workspaces?.length ?? 0}
           actions={
             <button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-accent-hover hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer subtle-focus"
             >
               <Plus className="h-4 w-4" />
               <span>New Workspace</span>
@@ -70,21 +70,21 @@ export function DashboardPage() {
           }
         />
 
-        {/* Filter Controls Bar */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        {/* Filter Controls Bar: Fluid & Intrinsic */}
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search workspaces by title or description..."
-            className="flex-1 min-w-[240px] max-w-md"
+            placeholder="Search workspaces by title or notes..."
+            className="w-full sm:max-w-md"
           />
 
           {/* Model Filter Pills */}
-          <div className="flex items-center gap-1 rounded-xl border border-border/70 bg-surface p-1 text-xs shadow-2xs">
+          <div className="flex items-center gap-1 rounded-lg border border-border/70 bg-surface p-1 text-xs shadow-2xs self-start sm:self-auto overflow-x-auto max-w-full">
             <button
               type="button"
               onClick={() => setModelFilter("all")}
-              className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer subtle-focus whitespace-nowrap ${
                 modelFilter === "all"
                   ? "bg-accent-subtle text-accent font-semibold shadow-2xs"
                   : "text-muted hover:text-foreground"
@@ -95,7 +95,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setModelFilter("gpt-4o-mini")}
-              className={`px-3 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer subtle-focus whitespace-nowrap ${
                 modelFilter === "gpt-4o-mini"
                   ? "bg-accent-subtle text-accent font-semibold shadow-2xs"
                   : "text-muted hover:text-foreground"
@@ -106,7 +106,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setModelFilter("gpt-4o")}
-              className={`px-3 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer subtle-focus whitespace-nowrap ${
                 modelFilter === "gpt-4o"
                   ? "bg-accent-subtle text-accent font-semibold shadow-2xs"
                   : "text-muted hover:text-foreground"
@@ -119,15 +119,15 @@ export function DashboardPage() {
 
         {/* Loading Skeletons */}
         {isLoading && (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 intrinsic-grid-cards">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
-                className="h-44 rounded-2xl border border-border/60 bg-surface/60 animate-pulse p-5 flex flex-col justify-between"
+                className="h-44 rounded-xl border border-border/60 bg-surface/50 animate-pulse p-5 flex flex-col justify-between shadow-2xs"
               >
                 <div>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-surface-secondary" />
+                    <div className="h-10 w-10 rounded-lg bg-surface-secondary" />
                     <div className="space-y-2 flex-1">
                       <div className="h-4 w-3/4 rounded bg-surface-secondary" />
                       <div className="h-3 w-1/3 rounded bg-surface-secondary" />
@@ -149,18 +149,19 @@ export function DashboardPage() {
 
         {/* Error Banner */}
         {isError && (
-          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-error/25 bg-error/5 p-8 text-center">
+          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-error/25 bg-error/5 p-8 text-center">
             <AlertCircle className="h-8 w-8 text-error mb-2" />
             <h3 className="text-sm font-semibold text-foreground">Failed to load workspaces</h3>
-            <p className="mt-1 text-xs text-muted max-w-sm">
+            <p className="mt-1 text-xs text-foreground-secondary max-w-sm">
               We encountered an issue communicating with the backend. Please verify your connection.
             </p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-4 rounded-xl border border-border bg-surface px-4 py-1.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
             >
-              Try Again
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Try Again</span>
             </button>
           </div>
         )}
@@ -171,7 +172,7 @@ export function DashboardPage() {
             <EmptyState
               icon={<FolderOpen className="h-6 w-6" />}
               title="Your research starts here"
-              description="Create a notebook and bring your sources together to start asking grounded questions."
+              description="Create a workspace and upload your sources to start exploring insights with citations."
               actionLabel="Create First Workspace"
               actionIcon={<Plus className="h-4 w-4" />}
               onAction={() => setIsCreateOpen(true)}
@@ -185,8 +186,8 @@ export function DashboardPage() {
             <EmptyState
               icon={<FolderOpen className="h-6 w-6" />}
               title="No matching workspaces found"
-              description={`No notebooks matched "${searchQuery}". Try a different keyword or reset filters.`}
-              actionLabel="Clear Search"
+              description={`No notebooks matched "${searchQuery}". Try a different search query or reset engine filters.`}
+              actionLabel="Clear Filters"
               onAction={() => {
                 setSearchQuery("");
                 setModelFilter("all");
@@ -197,7 +198,7 @@ export function DashboardPage() {
 
         {/* Workspaces Grid */}
         {!isLoading && !isError && filteredWorkspaces && filteredWorkspaces.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 intrinsic-grid-cards">
             {filteredWorkspaces.map((ws) => (
               <div
                 key={ws.id}
@@ -209,12 +210,12 @@ export function DashboardPage() {
                     navigate(`/workspace/${ws.id}`);
                   }
                 }}
-                className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-surface p-5 transition-all card-hover cursor-pointer subtle-focus shadow-2xs hover:shadow-md"
+                className="@container group relative flex flex-col justify-between rounded-xl border border-border/80 bg-surface p-5 transition-all card-hover cursor-pointer subtle-focus shadow-2xs hover:shadow-md"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-secondary border border-border/60 text-xl shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border/60 text-xl shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                         {ws.icon || "🧠"}
                       </div>
                       <div className="min-w-0">
@@ -237,7 +238,7 @@ export function DashboardPage() {
                         e.stopPropagation();
                         setDeletingWorkspace({ id: ws.id, title: ws.title });
                       }}
-                      className="p-1.5 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer shrink-0 z-10"
+                      className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer shrink-0 subtle-focus"
                       title="Delete workspace"
                       aria-label={`Delete workspace ${ws.title}`}
                     >
@@ -265,7 +266,7 @@ export function DashboardPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       {/* Create Workspace Modal */}
       <CreateWorkspaceDialog

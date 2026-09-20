@@ -48,7 +48,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/80 backdrop-blur-md transition-colors shadow-2xs">
+      <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md transition-colors shadow-2xs">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* Left: Brand & Primary Navigation */}
           <div className="flex items-center gap-7">
@@ -61,10 +61,10 @@ export function Navbar() {
             </Link>
 
             {session?.user && (
-              <nav className="hidden md:flex items-center gap-1.5 text-xs font-medium">
+              <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-1 text-xs font-medium">
                 <Link
                   to="/dashboard"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all subtle-focus ${
                     location.pathname === "/dashboard" || location.pathname.startsWith("/workspace")
                       ? "bg-accent-subtle text-accent font-semibold shadow-2xs"
                       : "text-foreground-secondary hover:text-foreground hover:bg-surface-secondary/70"
@@ -76,7 +76,7 @@ export function Navbar() {
 
                 <Link
                   to="/memories"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all subtle-focus ${
                     location.pathname === "/memories"
                       ? "bg-accent-subtle text-accent font-semibold shadow-2xs"
                       : "text-foreground-secondary hover:text-foreground hover:bg-surface-secondary/70"
@@ -95,7 +95,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setCommandPaletteOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-border/80 bg-surface-secondary/50 px-2.5 sm:px-3 py-1.5 text-xs text-muted hover:text-foreground hover:bg-surface-secondary hover:border-border transition-all cursor-pointer shadow-2xs"
+              className="flex items-center gap-2 h-9 rounded-lg border border-border/80 bg-surface-secondary/50 px-2.5 sm:px-3 text-xs text-muted hover:text-foreground hover:bg-surface-secondary hover:border-border transition-all cursor-pointer shadow-2xs subtle-focus"
               title="Quick Search (⌘K)"
               aria-label="Open Command Palette"
             >
@@ -113,8 +113,8 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full border border-border/80 bg-surface hover:bg-surface-secondary hover:border-border transition-all cursor-pointer shadow-2xs group subtle-focus"
-                  title="Open profile menu"
+                  className="flex items-center gap-2 h-9 pl-1.5 pr-2.5 rounded-full border border-border/80 bg-surface hover:bg-surface-secondary hover:border-border transition-all cursor-pointer shadow-2xs group subtle-focus"
+                  title="Open user profile menu"
                   aria-expanded={profileMenuOpen}
                   aria-haspopup="true"
                 >
@@ -125,7 +125,7 @@ export function Navbar() {
                       className="h-6 w-6 rounded-full ring-1 ring-border/80 object-cover"
                     />
                   ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-white shadow-xs">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-xs">
                       {session.user.name?.charAt(0) || "U"}
                     </div>
                   )}
@@ -151,7 +151,7 @@ export function Navbar() {
                           className="h-9 w-9 rounded-full ring-1 ring-border object-cover"
                         />
                       ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white shadow-xs">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-xs">
                           {session.user.name?.charAt(0) || "U"}
                         </div>
                       )}
@@ -170,7 +170,7 @@ export function Navbar() {
                       <Link
                         to="/dashboard"
                         onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
+                        className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors subtle-focus"
                       >
                         <FolderOpen className="h-4 w-4 text-accent" />
                         <span>Workspaces Library</span>
@@ -179,7 +179,7 @@ export function Navbar() {
                       <Link
                         to="/memories"
                         onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
+                        className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors subtle-focus"
                       >
                         <BrainCircuit className="h-4 w-4 text-accent" />
                         <span>Knowledge Memories</span>
@@ -196,7 +196,7 @@ export function Navbar() {
                         signOutMutation.mutate();
                       }}
                       disabled={signOutMutation.isPending}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium text-error hover:bg-error/10 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-error hover:bg-error/10 transition-colors cursor-pointer subtle-focus"
                     >
                       <LogOut className="h-4 w-4 text-error" />
                       <span>{signOutMutation.isPending ? "Signing out..." : "Sign out"}</span>
@@ -209,7 +209,7 @@ export function Navbar() {
                 type="button"
                 onClick={handleSignIn}
                 disabled={signingIn}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer disabled:opacity-75"
+                className="inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 text-xs font-semibold shadow-xs hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer disabled:opacity-75 subtle-focus"
               >
                 {signingIn && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 <span>Sign In</span>
@@ -220,8 +220,9 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 rounded-lg border border-border/80 bg-surface text-muted hover:text-foreground transition-colors cursor-pointer"
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg border border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
               aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
@@ -238,10 +239,10 @@ export function Navbar() {
                     <img
                       src={session.user.image}
                       alt={session.user.name || "User avatar"}
-                      className="h-8 w-8 rounded-full ring-1 ring-border"
+                      className="h-8 w-8 rounded-full ring-1 ring-border object-cover"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                       {session.user.name?.charAt(0) || "U"}
                     </div>
                   )}
@@ -259,7 +260,7 @@ export function Navbar() {
                   <Link
                     to="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
                   >
                     <FolderOpen className="h-4 w-4 text-accent" />
                     <span>Workspaces Library</span>
@@ -268,7 +269,7 @@ export function Navbar() {
                   <Link
                     to="/memories"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-foreground hover:bg-surface-secondary transition-colors"
                   >
                     <BrainCircuit className="h-4 w-4 text-accent" />
                     <span>Knowledge Memories</span>
@@ -282,7 +283,7 @@ export function Navbar() {
                       setMobileMenuOpen(false);
                       signOutMutation.mutate();
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-error hover:bg-error/10 transition-colors"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-error hover:bg-error/10 transition-colors"
                   >
                     <LogOut className="h-4 w-4 text-error" />
                     <span>Sign out</span>
@@ -297,7 +298,7 @@ export function Navbar() {
                     setMobileMenuOpen(false);
                     handleSignIn();
                   }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover shadow-xs"
+                  className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 shadow-xs"
                 >
                   <span>Sign In with Google</span>
                 </button>

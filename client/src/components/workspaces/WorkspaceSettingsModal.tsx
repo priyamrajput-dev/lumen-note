@@ -40,7 +40,20 @@ export function WorkspaceSettingsModal({
     }
   }, [workspace]);
 
-  if (!isOpen || !workspace) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !updateMutation.isPending && !showDeleteConfirm) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, updateMutation.isPending, showDeleteConfirm, onClose]);
+
+  if (!isOpen || !workspace || typeof document === "undefined") return null;
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,14 +91,23 @@ export function WorkspaceSettingsModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="workspace-settings-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+        onClick={updateMutation.isPending ? undefined : onClose}
+      />
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3.5 border-b border-border">
+        <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-secondary text-muted">
               <Settings className="h-4 w-4" />
             </div>
-            <h3 className="text-base font-bold text-foreground">
+            <h3 id="workspace-settings-title" className="fluid-h3 text-foreground tracking-tight">
               Workspace Settings
             </h3>
           </div>
@@ -93,14 +115,15 @@ export function WorkspaceSettingsModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
+            aria-label="Close settings dialog"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-error/10 border border-error/25 px-3 py-2 text-xs text-error">
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-error/10 border border-error/25 px-3 py-2 text-xs text-error">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -108,7 +131,7 @@ export function WorkspaceSettingsModal({
 
         <form onSubmit={handleUpdate} className="mt-4 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1.5">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Workspace Icon
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -117,11 +140,12 @@ export function WorkspaceSettingsModal({
                   key={em}
                   type="button"
                   onClick={() => setIcon(em)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all cursor-pointer ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all cursor-pointer subtle-focus ${
                     icon === em
                       ? "border-accent bg-accent-subtle shadow-xs scale-105"
-                      : "border-border bg-surface-secondary/60 hover:bg-surface-secondary text-foreground"
+                      : "border-border/80 bg-surface-secondary/60 hover:bg-surface-secondary text-foreground"
                   }`}
+                  aria-label={`Select icon ${em}`}
                 >
                   {em}
                 </button>
@@ -130,68 +154,72 @@ export function WorkspaceSettingsModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1">
+            <label htmlFor="settings-title" className="block text-xs font-semibold text-foreground mb-1">
               Title
             </label>
             <input
+              id="settings-title"
               type="text"
               required
               maxLength={120}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3.5 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
+              className="w-full h-9 rounded-lg border border-border/80 bg-surface px-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1">
+            <label htmlFor="settings-desc" className="block text-xs font-semibold text-foreground mb-1">
               Description
             </label>
             <textarea
+              id="settings-desc"
               rows={2}
               maxLength={500}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3.5 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors resize-none"
+              className="w-full rounded-lg border border-border/80 bg-surface p-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1.5">
+            <span className="block text-xs font-semibold text-foreground mb-1.5">
               Default LLM Engine
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o-mini")}
-                className={`p-2 rounded-xl border text-left text-xs transition-colors cursor-pointer ${
+                className={`p-2.5 rounded-lg border text-left transition-colors cursor-pointer subtle-focus ${
                   defaultModel === "gpt-4o-mini"
-                    ? "border-accent bg-accent-subtle font-semibold text-foreground"
-                    : "border-border bg-surface-secondary/40 text-muted hover:text-foreground"
+                    ? "border-accent bg-accent-subtle font-semibold text-foreground shadow-2xs"
+                    : "border-border/80 bg-surface-secondary/40 text-muted hover:text-foreground"
                 }`}
               >
-                gpt-4o-mini
+                <div className="text-xs font-semibold text-foreground">gpt-4o-mini</div>
+                <div className="text-[10px] text-muted">Fast &amp; cost-efficient</div>
               </button>
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o")}
-                className={`p-2 rounded-xl border text-left text-xs transition-colors cursor-pointer ${
+                className={`p-2.5 rounded-lg border text-left transition-colors cursor-pointer subtle-focus ${
                   defaultModel === "gpt-4o"
-                    ? "border-accent bg-accent-subtle font-semibold text-foreground"
-                    : "border-border bg-surface-secondary/40 text-muted hover:text-foreground"
+                    ? "border-accent bg-accent-subtle font-semibold text-foreground shadow-2xs"
+                    : "border-border/80 bg-surface-secondary/40 text-muted hover:text-foreground"
                 }`}
               >
-                gpt-4o
+                <div className="text-xs font-semibold text-foreground">gpt-4o</div>
+                <div className="text-[10px] text-muted">Deep reasoning</div>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-3.5 border-t border-border">
+          <div className="flex items-center justify-between pt-4 border-t border-border/70">
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={deleteMutation.isPending}
-              className="inline-flex items-center gap-1.5 text-xs text-error hover:opacity-80 transition-opacity cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-error hover:bg-error/10 rounded-lg transition-colors cursor-pointer subtle-focus"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete Workspace</span>
@@ -201,14 +229,14 @@ export function WorkspaceSettingsModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                className="h-9 px-3.5 text-xs text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors cursor-pointer subtle-focus"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all shadow-xs cursor-pointer subtle-focus"
               >
                 {updateMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />

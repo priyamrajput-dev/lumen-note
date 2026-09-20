@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useCreateWorkspace } from "@/api/workspaces";
 import { getErrorMessage } from "@/api/client";
@@ -26,7 +26,20 @@ export function CreateWorkspaceDialog({
 
   const createMutation = useCreateWorkspace();
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !createMutation.isPending) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, createMutation.isPending, onClose]);
+
+  if (!isOpen || typeof document === "undefined") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,16 +66,25 @@ export function CreateWorkspaceDialog({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-workspace-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+        onClick={createMutation.isPending ? undefined : onClose}
+      />
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3.5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{icon}</span>
+        <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl" aria-hidden="true">{icon}</span>
             <div>
-              <h3 className="text-base font-bold text-foreground">
+              <h3 id="create-workspace-title" className="fluid-h3 text-foreground tracking-tight">
                 New Research Workspace
               </h3>
-              <p className="text-[11px] text-muted">
+              <p className="text-xs text-foreground-secondary">
                 Group sources, grounded chats, and synthesized notes.
               </p>
             </div>
@@ -70,14 +92,16 @@ export function CreateWorkspaceDialog({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+            disabled={createMutation.isPending}
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
+            aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-error/10 border border-error/25 px-3 py-2 text-xs text-error">
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-error/10 border border-error/25 px-3 py-2 text-xs text-error">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -86,7 +110,7 @@ export function CreateWorkspaceDialog({
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Icon Selector */}
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1.5">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Workspace Icon
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -95,11 +119,12 @@ export function CreateWorkspaceDialog({
                   key={emoji}
                   type="button"
                   onClick={() => setIcon(emoji)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all cursor-pointer ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all cursor-pointer subtle-focus ${
                     icon === emoji
                       ? "border-accent bg-accent-subtle shadow-xs scale-105"
-                      : "border-border bg-surface-secondary/60 hover:bg-surface-secondary text-foreground"
+                      : "border-border/80 bg-surface-secondary/60 hover:bg-surface-secondary text-foreground"
                   }`}
+                  aria-label={`Select icon ${emoji}`}
                 >
                   {emoji}
                 </button>
@@ -109,61 +134,63 @@ export function CreateWorkspaceDialog({
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1">
+            <label htmlFor="workspace-title" className="block text-xs font-semibold text-foreground mb-1">
               Title <span className="text-accent">*</span>
             </label>
             <input
+              id="workspace-title"
               type="text"
               required
               maxLength={120}
               placeholder="e.g. Distributed Systems & AI Research"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3.5 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
+              className="w-full h-9 rounded-lg border border-border/80 bg-surface px-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1">
+            <label htmlFor="workspace-desc" className="block text-xs font-semibold text-foreground mb-1">
               Description <span className="text-muted font-normal">(optional)</span>
             </label>
             <textarea
+              id="workspace-desc"
               rows={2}
               maxLength={500}
               placeholder="What are you researching in this workspace?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface-secondary/40 px-3.5 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors resize-none"
+              className="w-full rounded-lg border border-border/80 bg-surface p-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors resize-none"
             />
           </div>
 
           {/* Default Model */}
           <div>
-            <label className="block text-xs font-medium text-foreground mb-1.5">
+            <span className="block text-xs font-semibold text-foreground mb-1.5">
               Default LLM Engine
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o-mini")}
-                className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer subtle-focus ${
                   defaultModel === "gpt-4o-mini"
-                    ? "border-accent bg-accent-subtle"
-                    : "border-border bg-surface-secondary/40 hover:bg-surface-secondary"
+                    ? "border-accent bg-accent-subtle shadow-2xs"
+                    : "border-border/80 bg-surface-secondary/40 hover:bg-surface-secondary"
                 }`}
               >
                 <span className="text-xs font-semibold text-foreground">gpt-4o-mini</span>
-                <span className="text-[10px] text-muted">Fast & cost-efficient</span>
+                <span className="text-[10px] text-muted">Fast &amp; cost-efficient</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o")}
-                className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer subtle-focus ${
                   defaultModel === "gpt-4o"
-                    ? "border-accent bg-accent-subtle"
-                    : "border-border bg-surface-secondary/40 hover:bg-surface-secondary"
+                    ? "border-accent bg-accent-subtle shadow-2xs"
+                    : "border-border/80 bg-surface-secondary/40 hover:bg-surface-secondary"
                 }`}
               >
                 <span className="text-xs font-semibold text-foreground">gpt-4o</span>
@@ -173,19 +200,19 @@ export function CreateWorkspaceDialog({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-3.5 border-t border-border">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/70">
             <button
               type="button"
               onClick={onClose}
               disabled={createMutation.isPending}
-              className="px-3.5 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors cursor-pointer"
+              className="h-9 px-4 text-xs font-medium text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors cursor-pointer subtle-focus"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending || !title.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all shadow-xs cursor-pointer subtle-focus"
             >
               {createMutation.isPending ? (
                 <>

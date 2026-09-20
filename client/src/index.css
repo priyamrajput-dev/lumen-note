@@ -9,34 +9,48 @@
   --color-foreground-secondary: var(--foreground-secondary);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-subtle: var(--accent-subtle);
   --color-accent-glow: var(--accent-glow);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-
-  /* Compatibility aliases for Shadcn UI components */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-card: var(--surface);
   --color-card-foreground: var(--foreground);
   --color-popover: var(--surface-elevated);
   --color-popover-foreground: var(--foreground);
-  --color-primary: var(--accent);
-  --color-primary-foreground: #ffffff;
-  --color-secondary: var(--surface-secondary);
-  --color-secondary-foreground: var(--foreground);
   --color-input: var(--border);
-  --color-ring: var(--accent);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-error: var(--error);
+  --color-error-subtle: var(--error-subtle);
+  --color-danger: var(--error);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
+  --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --shadow-glow: var(--shadow-glow);
+
+  --radius-badge: 0.375rem;
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-container: 1rem;
+  --radius-dialog: 1.25rem;
 
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
@@ -48,66 +62,108 @@
 
 :root,
 html.light {
-  --background: #FBFBFA;
+  --background: oklch(0.985 0.003 95);
   --surface: #FFFFFF;
-  --surface-secondary: #F4F4F5;
+  --surface-secondary: oklch(0.96 0.003 95);
   --surface-elevated: #FFFFFF;
-  --foreground: #09090B;
-  --foreground-secondary: #52525B;
-  --muted: #71717A;
-  --border: #E4E4E7;
-  --accent: #EA580C;
-  --accent-hover: #C2410C;
-  --accent-subtle: #FFEDD5;
-  --accent-glow: rgba(234, 88, 12, 0.15);
-  --success: #16A34A;
-  --warning: #EAB308;
-  --error: #DC2626;
+  --foreground: oklch(0.14 0.005 285);
+  --foreground-secondary: oklch(0.42 0.015 285);
+  --muted: oklch(0.55 0.015 285);
+  --border: oklch(0.90 0.005 285);
+  --border-subtle: oklch(0.94 0.004 285);
+
+  --primary: oklch(0.60 0.20 42);
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: oklch(0.95 0.04 55);
+  --primary-hover: color-mix(in oklch, var(--primary) 88%, black);
+
+  --secondary: var(--surface-secondary);
+  --secondary-foreground: var(--foreground);
+
+  --accent: var(--primary);
+  --accent-hover: var(--primary-hover);
+  --accent-subtle: var(--primary-subtle);
+  --accent-glow: color-mix(in oklch, var(--primary) 20%, transparent);
+  --ring: var(--primary);
+
+  --success: oklch(0.60 0.16 145);
+  --success-subtle: color-mix(in oklch, var(--success) 12%, transparent);
+  --warning: oklch(0.75 0.16 85);
+  --warning-subtle: color-mix(in oklch, var(--warning) 12%, transparent);
+  --error: oklch(0.58 0.22 25);
+  --error-subtle: color-mix(in oklch, var(--error) 12%, transparent);
+  --info: oklch(0.58 0.16 240);
+  --info-subtle: color-mix(in oklch, var(--info) 12%, transparent);
 
   --grid-line: rgba(9, 9, 11, 0.03);
   --dot-color: rgba(9, 9, 11, 0.06);
-  --scrollbar-thumb: rgba(9, 9, 11, 0.12);
-  --scrollbar-hover: rgba(9, 9, 11, 0.22);
+  --scrollbar-thumb: rgba(9, 9, 11, 0.14);
+  --scrollbar-hover: rgba(9, 9, 11, 0.24);
 
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-2xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px -2px rgba(234, 88, 12, 0.25);
+  --shadow-glow: 0 0 24px -2px rgba(234, 88, 12, 0.25);
 }
 
 html.dark {
-  --background: #09090B;
-  --surface: #121215;
-  --surface-secondary: #1C1C21;
-  --surface-elevated: #24242B;
-  --foreground: #FAFAFA;
-  --foreground-secondary: #A1A1AA;
-  --muted: #71717A;
-  --border: #27272A;
-  --accent: #F97316;
-  --accent-hover: #FB923C;
-  --accent-subtle: rgba(249, 115, 22, 0.12);
-  --accent-glow: rgba(249, 115, 22, 0.22);
-  --success: #22C55E;
-  --warning: #FACC15;
-  --error: #EF4444;
+  --background: oklch(0.14 0.005 285);
+  --surface: oklch(0.18 0.008 285);
+  --surface-secondary: oklch(0.22 0.009 285);
+  --surface-elevated: oklch(0.26 0.010 285);
+  --foreground: oklch(0.98 0.002 285);
+  --foreground-secondary: oklch(0.72 0.015 285);
+  --muted: oklch(0.55 0.015 285);
+  --border: oklch(0.25 0.008 285);
+  --border-subtle: oklch(0.20 0.006 285);
+
+  --primary: oklch(0.68 0.19 45);
+  --primary-foreground: #FFFFFF;
+  --primary-subtle: color-mix(in oklch, var(--primary) 14%, transparent);
+  --primary-hover: color-mix(in oklch, var(--primary) 88%, white);
+
+  --secondary: var(--surface-secondary);
+  --secondary-foreground: var(--foreground);
+
+  --accent: var(--primary);
+  --accent-hover: var(--primary-hover);
+  --accent-subtle: var(--primary-subtle);
+  --accent-glow: color-mix(in oklch, var(--primary) 28%, transparent);
+  --ring: var(--primary);
+
+  --success: oklch(0.72 0.17 145);
+  --success-subtle: color-mix(in oklch, var(--success) 14%, transparent);
+  --warning: oklch(0.82 0.16 85);
+  --warning-subtle: color-mix(in oklch, var(--warning) 14%, transparent);
+  --error: oklch(0.65 0.22 25);
+  --error-subtle: color-mix(in oklch, var(--error) 14%, transparent);
+  --info: oklch(0.68 0.16 240);
+  --info-subtle: color-mix(in oklch, var(--info) 14%, transparent);
 
   --grid-line: rgba(250, 250, 250, 0.03);
   --dot-color: rgba(250, 250, 250, 0.05);
   --scrollbar-thumb: rgba(250, 250, 250, 0.14);
   --scrollbar-hover: rgba(250, 250, 250, 0.24);
 
+  --shadow-2xs: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 1px 2px -1px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 20px -4px rgba(0, 0, 0, 0.7), 0 4px 8px -4px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 25px -2px rgba(249, 115, 22, 0.35);
+  --shadow-glow: 0 0 28px -2px rgba(249, 115, 22, 0.35);
 }
 
 @layer base {
-  * {
+  *, ::before, ::after {
+    box-sizing: border-box;
     border-color: var(--border);
+  }
+
+  html {
+    color-scheme: dark light;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -117,6 +173,8 @@ html.dark {
     letter-spacing: -0.012em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
 
   code, pre, kbd {
@@ -127,6 +185,60 @@ html.dark {
     background-color: var(--accent-subtle);
     color: var(--foreground);
   }
+
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Fluid Typography Utilities */
+.fluid-display {
+  font-size: clamp(2.25rem, 1.8rem + 2.25vw, 3.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.fluid-h1 {
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+.fluid-h2 {
+  font-size: clamp(1.2rem, 1.05rem + 0.75vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.fluid-h3 {
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.15rem);
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+/* Intrinsic Layout Utilities */
+.intrinsic-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.intrinsic-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+/* Page Container */
+.page-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
 }
 
 /* Background Patterns */
@@ -146,7 +258,7 @@ html.dark {
   background: radial-gradient(circle at 50% 0%, var(--accent-subtle) 0%, transparent 70%);
 }
 
-/* Glassmorphism utility */
+/* Glass Surface Utility */
 .glass-panel {
   background: color-mix(in srgb, var(--surface) 85%, transparent);
   backdrop-filter: blur(12px);
@@ -154,22 +266,25 @@ html.dark {
   border: 1px solid var(--border);
 }
 
-/* Card hover lift effect */
+/* Unified Card Hover Lift */
 .card-hover {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-color: color-mix(in oklch, var(--accent) 40%, var(--border));
   box-shadow: var(--shadow-md);
 }
 
+/* Accessible Focus System */
 .subtle-focus {
   outline: none;
 }
 .subtle-focus:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 
 /* 3D Flashcard transforms */
@@ -189,7 +304,7 @@ html.dark {
   transform: rotateY(180deg);
 }
 
-/* Custom slim scrollbar */
+/* Custom Slim Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -206,4 +321,14 @@ html.dark {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
