@@ -12,6 +12,7 @@ import { CitationsPopover } from "./CitationsPopover";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { SourcePreviewDrawer } from "@/components/sources/SourcePreviewDrawer";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useSmoothStream } from "@/hooks/useSmoothStream";
 import {
   Sparkles,
   Plus,
@@ -60,9 +61,15 @@ export function ChatStudio({
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
 
-  // Streaming State
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingText, setStreamingText] = useState("");
+  // Smooth Streaming State
+  const {
+    displayedText: streamingText,
+    isStreaming,
+    startStream,
+    pushChunk,
+    finishStream,
+    stopStream,
+  } = useSmoothStream({ tickIntervalMs: 20 });
   const [optimisticUserMsg, setOptimisticUserMsg] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -100,14 +107,14 @@ export function ChatStudio({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auto scroll down
+  // Auto scroll down (smooth when idle, instant auto during active streaming to prevent jitter)
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? "auto" : "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [serverMessages, streamingText, optimisticUserMsg]);
+  }, [serverMessages, streamingText, optimisticUserMsg, isStreaming]);
 
   const handleCreateNewConversation = async () => {
     const newConv = await createConversationMutation.mutateAsync();
@@ -136,8 +143,8 @@ export function ChatStudio({
   const handleStopStreaming = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      setIsStreaming(false);
     }
+    stopStream();
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -147,8 +154,7 @@ export function ChatStudio({
 
     setInputMessage("");
     setOptimisticUserMsg(messageText);
-    setIsStreaming(true);
-    setStreamingText("");
+    startStream();
 
     const currentMessages = [
       ...(serverMessages?.map((m) => ({
@@ -170,7 +176,7 @@ export function ChatStudio({
         webSearch: webSearchEnabled,
         signal: controller.signal,
         onChunk: (chunk) => {
-          setStreamingText((prev) => prev + chunk);
+          pushChunk(chunk);
         },
         onConversationResolved: (resolvedId) => {
           if (!activeConversationId) {
@@ -178,20 +184,20 @@ export function ChatStudio({
           }
         },
         onFinish: async () => {
-          setIsStreaming(false);
-          setStreamingText("");
-          setOptimisticUserMsg(null);
-          await refetchMessages();
-          await refetchConversations();
+          finishStream(async () => {
+            await refetchMessages();
+            await refetchConversations();
+            setOptimisticUserMsg(null);
+          });
         },
         onError: (err) => {
           console.error("Stream error:", err);
-          setIsStreaming(false);
+          stopStream();
         },
       });
     } catch (err) {
       console.error(err);
-      setIsStreaming(false);
+      stopStream();
     }
   };
 
