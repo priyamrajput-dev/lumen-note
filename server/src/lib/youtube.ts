@@ -109,49 +109,135 @@ export async function fetchYoutubeTranscript(url: string): Promise<YoutubeExtrac
   let author = "";
   let description = "";
   let captionTracks: InnerTubeCaptionTrack[] = [];
+  let isVideoAccessible = true;
 
-  // Step 1: Query YouTube InnerTube API for video metadata and caption tracks
+  // Step 1: Query YouTube official oEmbed API (100% reliable, never blocked for public videos)
   try {
-    const resp = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "com.google.android.youtube/20.10.38 (Linux; U; Android 14)",
-      },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: "ANDROID",
-            clientVersion: "20.10.38",
-          },
-        },
-        videoId,
-      }),
-    });
-
-    if (resp.ok) {
-      const data = (await resp.json()) as {
-        videoDetails?: {
-          title?: string;
-          author?: string;
-          shortDescription?: string;
-        };
-        captions?: {
-          playerCaptionsTracklistRenderer?: {
-            captionTracks?: InnerTubeCaptionTrack[];
-          };
-        };
+    const oembedResp = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+    );
+    if (oembedResp.ok) {
+      const oembedData = (await oembedResp.json()) as {
+        title?: string;
+        author_name?: string;
       };
-      title = data?.videoDetails?.title || "";
-      author = data?.videoDetails?.author || "";
-      description = data?.videoDetails?.shortDescription || "";
-      captionTracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+      if (oembedData.title) title = oembedData.title;
+      if (oembedData.author_name) author = oembedData.author_name;
+    } else if (oembedResp.status === 404) {
+      isVideoAccessible = false;
     }
   } catch (err) {
-    console.warn("YouTube InnerTube metadata fetch warning:", err);
+    console.warn("YouTube oEmbed fetch warning:", err);
   }
 
-  // Step 2: Attempt transcript extraction using youtube-transcript package
+  // Step 2: Fetch watch page HTML to extract full description and player response
+  try {
+    const pageResp = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
+
+    if (pageResp.ok) {
+      const html = await pageResp.text();
+
+      // Extract full description from meta tags
+      const metaDesc =
+        html.match(/<meta\s+name="description"\s+content="([^"]*)"/i) ||
+        html.match(/<meta\s+property="og:description"\s+content="([^"]*)"/i);
+      if (metaDesc && metaDesc[1] && !description) {
+        description = decodeEntities(metaDesc[1]);
+      }
+
+      // Extract ytInitialPlayerResponse JSON
+      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/);
+      if (playerMatch) {
+        try {
+          const parsed = JSON.parse(playerMatch[1]) as {
+            videoDetails?: {
+              title?: string;
+              author?: string;
+              shortDescription?: string;
+            };
+            captions?: {
+              playerCaptionsTracklistRenderer?: {
+                captionTracks?: InnerTubeCaptionTrack[];
+              };
+            };
+          };
+          if (!title && parsed.videoDetails?.title) {
+            title = parsed.videoDetails.title;
+          }
+          if (!author && parsed.videoDetails?.author) {
+            author = parsed.videoDetails.author;
+          }
+          if (parsed.videoDetails?.shortDescription) {
+            description = parsed.videoDetails.shortDescription;
+          }
+          if (parsed.captions?.playerCaptionsTracklistRenderer?.captionTracks) {
+            captionTracks = parsed.captions.playerCaptionsTracklistRenderer.captionTracks;
+          }
+          isVideoAccessible = true;
+        } catch {
+          // JSON parsing failed, proceed with meta tags
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("YouTube watch page scrape warning:", err);
+  }
+
+  // Step 3: Query YouTube InnerTube API if metadata or caption tracks are still missing
+  if (!description || captionTracks.length === 0) {
+    try {
+      const resp = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "com.google.android.youtube/20.10.38 (Linux; U; Android 14)",
+        },
+        body: JSON.stringify({
+          context: {
+            client: {
+              clientName: "ANDROID",
+              clientVersion: "20.10.38",
+            },
+          },
+          videoId,
+        }),
+      });
+
+      if (resp.ok) {
+        const data = (await resp.json()) as {
+          videoDetails?: {
+            title?: string;
+            author?: string;
+            shortDescription?: string;
+          };
+          captions?: {
+            playerCaptionsTracklistRenderer?: {
+              captionTracks?: InnerTubeCaptionTrack[];
+            };
+          };
+        };
+        if (!title && data?.videoDetails?.title) title = data.videoDetails.title;
+        if (!author && data?.videoDetails?.author) author = data.videoDetails.author;
+        if (!description && data?.videoDetails?.shortDescription) {
+          description = data.videoDetails.shortDescription;
+        }
+        if (captionTracks.length === 0 && data?.captions?.playerCaptionsTracklistRenderer?.captionTracks) {
+          captionTracks = data.captions.playerCaptionsTracklistRenderer.captionTracks;
+        }
+        isVideoAccessible = true;
+      }
+    } catch (err) {
+      console.warn("YouTube InnerTube metadata fetch warning:", err);
+    }
+  }
+
+  // Step 4: Attempt transcript extraction using youtube-transcript package
   try {
     const segments = await YoutubeTranscript.fetchTranscript(videoId);
     const content = segments
@@ -159,21 +245,21 @@ export async function fetchYoutubeTranscript(url: string): Promise<YoutubeExtrac
       .join(" ")
       .trim();
 
-    if (content) {
+    if (content && content.length > 0) {
       return {
         videoId,
         title: title || `YouTube Video (${videoId})`,
-        author,
+        author: author || "YouTube Channel",
         description,
         content,
         hasCaptions: true,
       };
     }
-  } catch (e) {
+  } catch {
     // Fall through to direct caption tracks extraction
   }
 
-  // Step 3: Attempt direct fetch from InnerTube caption tracks
+  // Step 5: Attempt direct fetch from caption tracks
   if (captionTracks.length > 0) {
     // Prefer English if available, otherwise first available track
     const preferredTrack =
@@ -184,22 +270,25 @@ export async function fetchYoutubeTranscript(url: string): Promise<YoutubeExtrac
       try {
         const resp = await fetch(preferredTrack.baseUrl, {
           headers: {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)",
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
           },
         });
 
         if (resp.ok) {
           const xml = await resp.text();
-          const content = parseTranscriptXml(xml);
-          if (content) {
-            return {
-              videoId,
-              title: title || `YouTube Video (${videoId})`,
-              author,
-              description,
-              content,
-              hasCaptions: true,
-            };
+          if (xml && xml.trim().length > 0) {
+            const content = parseTranscriptXml(xml);
+            if (content && content.length > 0) {
+              return {
+                videoId,
+                title: title || `YouTube Video (${videoId})`,
+                author: author || "YouTube Channel",
+                description,
+                content,
+                hasCaptions: true,
+              };
+            }
           }
         }
       } catch (err) {
@@ -208,26 +297,33 @@ export async function fetchYoutubeTranscript(url: string): Promise<YoutubeExtrac
     }
   }
 
-  // Step 4: Graceful fallback - if captions unavailable, ingest video metadata and description
+  // Step 6: Graceful fallback - if captions unavailable, ingest video metadata and description
   if (title || description) {
     const fallbackSections = [
-      title ? `# ${title}` : "",
+      title ? `# ${title}` : `# YouTube Video: ${videoId}`,
       author ? `**Channel**: ${author}` : "",
-      description ? `## Video Description\n${description}` : "",
-      "*(Note: Closed captions were unavailable for this video; ingested video metadata and description)*",
+      `**YouTube URL**: https://www.youtube.com/watch?v=${videoId}`,
+      description ? `## Video Overview & Description\n${description}` : "",
+      "*(Note: Closed captions were unavailable for this video; ingested video metadata and overview)*",
     ].filter(Boolean);
 
     return {
       videoId,
       title: title || `YouTube: ${videoId}`,
-      author,
+      author: author || "YouTube Channel",
       description,
       content: fallbackSections.join("\n\n"),
       hasCaptions: false,
     };
   }
 
+  if (!isVideoAccessible) {
+    throw new ValidationError(
+      "This YouTube video could not be found or is private. Please verify that the video is public and that the link is correct.",
+    );
+  }
+
   throw new ValidationError(
-    "Could not extract video transcript or details. Please check the YouTube URL or verify the video is publicly accessible.",
+    "Could not extract video details. Please verify the YouTube URL is publicly accessible.",
   );
 }
