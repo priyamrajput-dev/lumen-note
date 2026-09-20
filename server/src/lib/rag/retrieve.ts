@@ -70,6 +70,7 @@ function computeSmartRelevance(
 export async function retrieveWorkspaceContext(
   workspaceId: string,
   query: string,
+  sourceIds?: string[],
 ): Promise<RetrievedChunk[]> {
   const chunks: RetrievedChunk[] = [];
 
@@ -104,6 +105,10 @@ export async function retrieveWorkspaceContext(
             continue;
           }
 
+          if (sourceIds && sourceIds.length > 0 && !sourceIds.includes(metadata.sourceId)) {
+            continue;
+          }
+
           chunks.push({
             sourceId: metadata.sourceId,
             sourceTitle: metadata.sourceTitle,
@@ -128,9 +133,13 @@ export async function retrieveWorkspaceContext(
 
   // 2. Intelligent Database Fallback with Keyword & Title Relevance Ranking
   try {
-    const sources = await sourceRepo.findSourcesByWorkspaceId(workspaceId, {
+    let sources = await sourceRepo.findSourcesByWorkspaceId(workspaceId, {
       status: "READY",
     });
+
+    if (sourceIds && sourceIds.length > 0) {
+      sources = sources.filter((s) => sourceIds.includes(s.id));
+    }
 
     if (sources.length === 0) {
       return [];

@@ -252,6 +252,7 @@ export interface StreamChatOptions {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   model?: ChatModel;
   webSearch?: boolean;
+  sourceIds?: string[];
   onChunk: (delta: string) => void;
   onConversationResolved?: (id: string) => void;
   onFinish?: (fullText: string) => void;
@@ -269,6 +270,7 @@ export async function streamChat({
   messages,
   model,
   webSearch,
+  sourceIds,
   onChunk,
   onConversationResolved,
   onFinish,
@@ -343,6 +345,7 @@ export async function streamChat({
         messages: formattedMessages,
         model,
         webSearch: !!webSearch,
+        sourceIds: sourceIds && sourceIds.length > 0 ? sourceIds : undefined,
       }),
       signal,
     });

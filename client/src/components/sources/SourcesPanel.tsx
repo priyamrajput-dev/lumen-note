@@ -29,9 +29,20 @@ import {
 interface SourcesPanelProps {
   workspaceId: string;
   isCompact?: boolean;
+  selectedSourceIds?: string[];
+  onToggleSourceSelect?: (id: string) => void;
+  onSelectAllSources?: () => void;
+  onClearSourceSelection?: () => void;
 }
 
-export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelProps) {
+export function SourcesPanel({
+  workspaceId,
+  isCompact = false,
+  selectedSourceIds: propSelectedIds,
+  onToggleSourceSelect,
+  onSelectAllSources,
+  onClearSourceSelection,
+}: SourcesPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<SourceType | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<SourceStatus | undefined>(undefined);
@@ -46,7 +57,9 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
   const deleteSourceMutation = useDeleteSource(workspaceId);
   const bulkDeleteMutation = useBulkDeleteSources(workspaceId);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
+  const selectedIds = propSelectedIds !== undefined ? propSelectedIds : internalSelectedIds;
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [previewSource, setPreviewSource] = useState<Source | null>(null);
   const [sourceToDelete, setSourceToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -56,17 +69,25 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
     sources && sources.length > 0 && selectedIds.length === sources.length;
 
   const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedIds([]);
+    if (onSelectAllSources) {
+      onSelectAllSources();
     } else {
-      setSelectedIds(sources?.map((s) => s.id) || []);
+      if (allSelected) {
+        setInternalSelectedIds([]);
+      } else {
+        setInternalSelectedIds(sources?.map((s) => s.id) || []);
+      }
     }
   };
 
   const toggleSelectOne = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
+    if (onToggleSourceSelect) {
+      onToggleSourceSelect(id);
+    } else {
+      setInternalSelectedIds((prev) =>
+        prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+      );
+    }
   };
 
   const handleConfirmSingleDelete = async () => {
@@ -74,7 +95,10 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
     const targetId = sourceToDelete.id;
     try {
       await deleteSourceMutation.mutateAsync(targetId);
-      setSelectedIds((prev) => prev.filter((id) => id !== targetId));
+      if (selectedIds.includes(targetId) && onToggleSourceSelect) {
+        onToggleSourceSelect(targetId);
+      }
+      setInternalSelectedIds((prev) => prev.filter((id) => id !== targetId));
       if (previewSource?.id === targetId) {
         setPreviewSource(null);
       }
@@ -92,7 +116,10 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       if (previewSource && selectedIds.includes(previewSource.id)) {
         setPreviewSource(null);
       }
-      setSelectedIds([]);
+      if (onClearSourceSelection) {
+        onClearSourceSelection();
+      }
+      setInternalSelectedIds([]);
     } catch (err) {
       console.error("Failed to bulk delete sources:", err);
     } finally {
@@ -275,20 +302,38 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
 
         {!isLoading && !isError && sources && sources.length > 0 && (
           <>
-            {/* Select All Toggle Bar */}
-            <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-muted">
+            {/* Grounding Selection Bar */}
+            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-surface-secondary/40 border border-border/60 text-[10px] font-mono text-muted mb-1">
               <button
                 type="button"
                 onClick={toggleSelectAll}
                 className="flex items-center gap-1.5 hover:text-foreground cursor-pointer subtle-focus rounded"
+                title={allSelected ? "Deselect all sources" : "Select all sources for chat grounding"}
               >
                 {allSelected ? (
                   <CheckSquare className="h-3.5 w-3.5 text-accent" />
                 ) : (
                   <Square className="h-3.5 w-3.5 text-muted" />
                 )}
-                <span>Select All ({sources.length})</span>
+                <span>
+                  {selectedIds.length > 0 && selectedIds.length < sources.length
+                    ? `${selectedIds.length} of ${sources.length} active for chat`
+                    : `All sources active (${sources.length})`}
+                </span>
               </button>
+
+              {selectedIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onClearSourceSelection) onClearSourceSelection();
+                    else setInternalSelectedIds([]);
+                  }}
+                  className="text-[10px] text-accent hover:underline cursor-pointer font-sans font-medium"
+                >
+                  Reset to all
+                </button>
+              )}
             </div>
 
             {sources.map((src) => {
@@ -298,7 +343,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                   key={src.id}
                   className={`@container group relative flex flex-col rounded-lg border p-2.5 transition-all text-xs ${
                     isSelected
-                      ? "border-accent/60 bg-accent-subtle/50"
+                      ? "border-accent/60 bg-accent-subtle/40 ring-1 ring-accent/30"
                       : "border-border/80 bg-surface hover:border-border hover:bg-surface-secondary/40 shadow-2xs"
                   }`}
                 >
@@ -306,13 +351,14 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                     <button
                       type="button"
                       onClick={() => toggleSelectOne(src.id)}
-                      className="text-muted hover:text-foreground mt-0.5 shrink-0 cursor-pointer subtle-focus rounded"
-                      aria-label={`Select source ${src.title}`}
+                      className="text-muted hover:text-foreground mt-0.5 shrink-0 cursor-pointer subtle-focus rounded p-0.5"
+                      aria-label={`Select source ${src.title} for chat grounding`}
+                      title={isSelected ? "Remove from active chat context" : "Select to chat specifically with this source"}
                     >
                       {isSelected ? (
-                        <CheckSquare className="h-3.5 w-3.5 text-accent" />
+                        <CheckSquare className="h-4 w-4 text-accent" />
                       ) : (
-                        <Square className="h-3.5 w-3.5 text-muted" />
+                        <Square className="h-4 w-4 text-muted hover:text-foreground" />
                       )}
                     </button>
 
