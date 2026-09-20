@@ -46,9 +46,13 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const isInsideWorkspace = location.pathname.startsWith("/workspace");
+
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md transition-colors shadow-2xs">
+      <header className={`sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md transition-colors shadow-2xs ${
+        isInsideWorkspace ? "hidden md:block" : "block"
+      }`}>
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* Left: Brand & Primary Navigation */}
           <div className="flex items-center gap-7">
