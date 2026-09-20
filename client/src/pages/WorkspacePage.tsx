@@ -155,11 +155,12 @@ export function WorkspacePage() {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center justify-center h-8 w-8 rounded-lg border border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary hover:border-accent/40 transition-all cursor-pointer shadow-2xs subtle-focus"
-            title="Workspace Settings"
-            aria-label="Workspace Settings"
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary hover:border-accent/40 transition-all cursor-pointer shadow-2xs subtle-focus text-xs font-medium"
+            title="Edit Workspace Settings"
+            aria-label="Edit Workspace Settings"
           >
             <Settings className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Settings</span>
           </button>
         </div>
       </header>

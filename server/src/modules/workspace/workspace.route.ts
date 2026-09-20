@@ -28,7 +28,7 @@ workspaceRoutes.get(
 );
 workspaceRoutes.patch(
   "/:workspaceId",
-  asyncHandler(workspaceController.updateWorspace.bind(workspaceController)),
+  asyncHandler(workspaceController.updateWorkspace.bind(workspaceController)),
 );
 workspaceRoutes.delete(
   "/:workspaceId",

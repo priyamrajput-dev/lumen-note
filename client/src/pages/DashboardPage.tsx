@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useWorkspaces, useDeleteWorkspace } from "@/api/workspaces";
 import { useAuthSession } from "@/api/auth";
 import { CreateWorkspaceDialog } from "@/components/workspaces/CreateWorkspaceDialog";
+import { WorkspaceSettingsModal } from "@/components/workspaces/WorkspaceSettingsModal";
 import { Footer } from "@/components/layout/Footer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { Workspace } from "@/types";
 import {
   Plus,
   FolderOpen,
@@ -17,6 +19,7 @@ import {
   Cpu,
   AlertCircle,
   RotateCcw,
+  Settings,
 } from "lucide-react";
 
 export function DashboardPage() {
@@ -28,6 +31,7 @@ export function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modelFilter, setModelFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] = useState<{ id: string; title: string } | null>(null);
 
   const filteredWorkspaces = workspaces?.filter((ws) => {
@@ -231,19 +235,35 @@ export function DashboardPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setDeletingWorkspace({ id: ws.id, title: ws.title });
-                      }}
-                      className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer shrink-0 subtle-focus"
-                      title="Delete workspace"
-                      aria-label={`Delete workspace ${ws.title}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingWorkspace(ws);
+                        }}
+                        className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-all cursor-pointer subtle-focus"
+                        title="Edit workspace"
+                        aria-label={`Edit workspace ${ws.title}`}
+                      >
+                        <Settings className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeletingWorkspace({ id: ws.id, title: ws.title });
+                        }}
+                        className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer subtle-focus"
+                        title="Delete workspace"
+                        aria-label={`Delete workspace ${ws.title}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <p className="mt-3.5 text-xs text-foreground-secondary line-clamp-2 leading-relaxed">
@@ -272,6 +292,13 @@ export function DashboardPage() {
       <CreateWorkspaceDialog
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
+      />
+
+      {/* Edit Workspace Modal */}
+      <WorkspaceSettingsModal
+        workspace={editingWorkspace}
+        isOpen={Boolean(editingWorkspace)}
+        onClose={() => setEditingWorkspace(null)}
       />
 
       {/* Delete Confirmation Modal */}
