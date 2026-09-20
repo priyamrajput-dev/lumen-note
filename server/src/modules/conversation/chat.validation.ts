@@ -11,6 +11,7 @@ export const chatBodySchema = z.object({
   messages: z.array(z.record(z.string(), z.unknown())).min(1),
   model: z.enum(CHAT_MODELS).optional(),
   webSearch: z.boolean().optional(),
+  sourceIds: z.array(z.string().trim()).optional(),
 });
 
 export type ChatBody = z.infer<typeof chatBodySchema>;

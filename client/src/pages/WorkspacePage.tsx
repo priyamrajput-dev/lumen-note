@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useWorkspace } from "@/api/workspaces";
 import { useSources } from "@/api/sources";
@@ -7,6 +7,7 @@ import { ChatStudio } from "@/components/chat/ChatStudio";
 import { SourcesPanel } from "@/components/sources/SourcesPanel";
 import { ArtifactsPanel } from "@/components/artifacts/ArtifactsPanel";
 import { WorkspaceSettingsModal } from "@/components/workspaces/WorkspaceSettingsModal";
+import { useMediaQuery } from "@/hooks/use-mobile";
 import {
   MessageSquare,
   FileText,
@@ -26,6 +27,7 @@ type MobileTabType = "chat" | "sources" | "artifacts";
 export function WorkspacePage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   // Mobile segmented tab state
   const [mobileTab, setMobileTab] = useState<MobileTabType>("chat");
@@ -34,11 +36,45 @@ export function WorkspacePage() {
   const [showSourcesPanel, setShowSourcesPanel] = useState(true);
   const [showArtifactsPanel, setShowArtifactsPanel] = useState(true);
 
+  // Selective chat grounding state
+  const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([]);
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const { data: workspace, isLoading, isError } = useWorkspace(workspaceId);
   const { data: sources } = useSources(workspaceId);
   const { data: artifacts } = useArtifacts(workspaceId);
+
+  // Sync selectedSourceIds if sources are deleted
+  useEffect(() => {
+    if (sources && selectedSourceIds.length > 0) {
+      const existingIds = new Set(sources.map((s) => s.id));
+      const valid = selectedSourceIds.filter((id) => existingIds.has(id));
+      if (valid.length !== selectedSourceIds.length) {
+        setSelectedSourceIds(valid);
+      }
+    }
+  }, [sources, selectedSourceIds]);
+
+  const handleToggleSourceSelect = (id: string) => {
+    setSelectedSourceIds((prev) =>
+      prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllSources = () => {
+    if (sources && sources.length > 0) {
+      if (selectedSourceIds.length === sources.length) {
+        setSelectedSourceIds([]);
+      } else {
+        setSelectedSourceIds(sources.map((s) => s.id));
+      }
+    }
+  };
+
+  const handleClearSourceSelection = () => {
+    setSelectedSourceIds([]);
+  };
 
   if (isLoading) {
     return (
@@ -235,56 +271,79 @@ export function WorkspacePage() {
       </nav>
 
       {/* 3. Main Workspace Body */}
-      {/* DESKTOP VIEW: Three-Panel Research Layout (lg and above) */}
-      <div className="hidden lg:flex flex-1 overflow-hidden divide-x divide-border">
-        {/* Panel 1: Sources (Left) */}
-        {showSourcesPanel && (
-          <aside aria-label="Research Sources" className="w-80 shrink-0 flex flex-col bg-surface-secondary/20 overflow-hidden">
-            <SourcesPanel workspaceId={workspace.id} isCompact />
-          </aside>
-        )}
+      {isDesktop ? (
+        /* DESKTOP VIEW: Three-Panel Research Layout (lg and above) */
+        <div className="flex flex-1 overflow-hidden divide-x divide-border">
+          {/* Panel 1: Sources (Left) */}
+          {showSourcesPanel && (
+            <aside aria-label="Research Sources" className="w-80 shrink-0 flex flex-col bg-surface-secondary/20 overflow-hidden">
+              <SourcesPanel
+                workspaceId={workspace.id}
+                isCompact
+                selectedSourceIds={selectedSourceIds}
+                onToggleSourceSelect={handleToggleSourceSelect}
+                onSelectAllSources={handleSelectAllSources}
+                onClearSourceSelection={handleClearSourceSelection}
+              />
+            </aside>
+          )}
 
-        {/* Panel 2: AI Research Chat (Center) */}
-        <main aria-label="Research Dialogue" className="flex-1 min-w-0 flex flex-col bg-background overflow-hidden">
-          <ChatStudio
-            workspaceId={workspace.id}
-            defaultModel={workspace.defaultModel}
-            sourcesCount={sources?.length || 0}
-            onNavigateToSources={() => setMobileTab("sources")}
-          />
-        </main>
-
-        {/* Panel 3: Notes & Learning Artifacts (Right) */}
-        {showArtifactsPanel && (
-          <aside aria-label="Learning Artifacts" className="w-84 xl:w-96 shrink-0 flex flex-col bg-surface-secondary/20 overflow-hidden">
-            <ArtifactsPanel workspaceId={workspace.id} isCompact />
-          </aside>
-        )}
-      </div>
-
-      {/* MOBILE & TABLET VIEW: Single Panel Switching (below lg) */}
-      <div className="flex lg:hidden flex-1 overflow-hidden">
-        {mobileTab === "sources" && (
-          <div id="panel-sources" role="tabpanel" aria-labelledby="tab-sources" className="w-full h-full overflow-hidden">
-            <SourcesPanel workspaceId={workspace.id} />
-          </div>
-        )}
-        {mobileTab === "chat" && (
-          <div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" className="w-full h-full overflow-hidden">
+          {/* Panel 2: AI Research Chat (Center) */}
+          <main aria-label="Research Dialogue" className="flex-1 min-w-0 flex flex-col bg-background overflow-hidden">
             <ChatStudio
               workspaceId={workspace.id}
               defaultModel={workspace.defaultModel}
               sourcesCount={sources?.length || 0}
+              sources={sources}
+              selectedSourceIds={selectedSourceIds}
+              onToggleSourceSelect={handleToggleSourceSelect}
+              onClearSourceSelection={handleClearSourceSelection}
               onNavigateToSources={() => setMobileTab("sources")}
             />
-          </div>
-        )}
-        {mobileTab === "artifacts" && (
-          <div id="panel-artifacts" role="tabpanel" aria-labelledby="tab-artifacts" className="w-full h-full overflow-hidden">
-            <ArtifactsPanel workspaceId={workspace.id} />
-          </div>
-        )}
-      </div>
+          </main>
+
+          {/* Panel 3: Notes & Learning Artifacts (Right) */}
+          {showArtifactsPanel && (
+            <aside aria-label="Learning Artifacts" className="w-84 xl:w-96 shrink-0 flex flex-col bg-surface-secondary/20 overflow-hidden">
+              <ArtifactsPanel workspaceId={workspace.id} isCompact />
+            </aside>
+          )}
+        </div>
+      ) : (
+        /* MOBILE & TABLET VIEW: Single Panel Switching (below lg) */
+        <div className="flex flex-1 overflow-hidden">
+          {mobileTab === "sources" && (
+            <div id="panel-sources" role="tabpanel" aria-labelledby="tab-sources" className="w-full h-full overflow-hidden">
+              <SourcesPanel
+                workspaceId={workspace.id}
+                selectedSourceIds={selectedSourceIds}
+                onToggleSourceSelect={handleToggleSourceSelect}
+                onSelectAllSources={handleSelectAllSources}
+                onClearSourceSelection={handleClearSourceSelection}
+              />
+            </div>
+          )}
+          {mobileTab === "chat" && (
+            <div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" className="w-full h-full overflow-hidden">
+              <ChatStudio
+                workspaceId={workspace.id}
+                defaultModel={workspace.defaultModel}
+                sourcesCount={sources?.length || 0}
+                sources={sources}
+                selectedSourceIds={selectedSourceIds}
+                onToggleSourceSelect={handleToggleSourceSelect}
+                onClearSourceSelection={handleClearSourceSelection}
+                onNavigateToSources={() => setMobileTab("sources")}
+              />
+            </div>
+          )}
+          {mobileTab === "artifacts" && (
+            <div id="panel-artifacts" role="tabpanel" aria-labelledby="tab-artifacts" className="w-full h-full overflow-hidden">
+              <ArtifactsPanel workspaceId={workspace.id} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Workspace Settings Dialog */}
       <WorkspaceSettingsModal

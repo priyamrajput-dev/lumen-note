@@ -137,6 +137,7 @@ export async function streamWorkspaceChat(
     messages: UIMessage[];
     model?: string;
     webSearch?: boolean;
+    sourceIds?: string[];
   },
 ) {
   const workspace = await assertWorkspaceAccess(workspaceId, userId);
@@ -163,7 +164,7 @@ export async function streamWorkspaceChat(
   });
 
   const [retrievedChunks, userMemories] = await Promise.all([
-    retrieveWorkspaceContext(workspaceId, userText),
+    retrieveWorkspaceContext(workspaceId, userText, input.sourceIds),
     searchUserMemories(userId, userText),
   ]);
 

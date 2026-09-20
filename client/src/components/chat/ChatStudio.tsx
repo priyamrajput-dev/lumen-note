@@ -26,8 +26,6 @@ import {
   Loader2,
   Cpu,
   MessageSquare,
-  PanelLeftClose,
-  PanelLeftOpen,
   Square,
   CornerDownLeft,
   ChevronDown,
@@ -37,6 +35,10 @@ interface ChatStudioProps {
   workspaceId: string;
   defaultModel?: ChatModel;
   sourcesCount?: number;
+  sources?: Source[];
+  selectedSourceIds?: string[];
+  onToggleSourceSelect?: (id: string) => void;
+  onClearSourceSelection?: () => void;
   onNavigateToSources?: () => void;
 }
 
@@ -44,6 +46,9 @@ export function ChatStudio({
   workspaceId,
   defaultModel = "gpt-4o-mini",
   sourcesCount = 0,
+  sources,
+  selectedSourceIds = [],
+  onClearSourceSelection,
   onNavigateToSources,
 }: ChatStudioProps) {
   const { data: conversations, refetch: refetchConversations } = useConversations(workspaceId);
@@ -51,10 +56,15 @@ export function ChatStudio({
   const deleteConversationMutation = useDeleteConversation(workspaceId);
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [showConvSidebar, setShowConvSidebar] = useState(false);
   const [convDropdownOpen, setConvDropdownOpen] = useState(false);
   const [convToDelete, setConvToDelete] = useState<{ id: string; title: string } | null>(null);
   const convDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Selective grounding helpers
+  const selectedSources = (sources || []).filter((s) => selectedSourceIds.includes(s.id));
+  const totalSourcesCount = sources?.length || sourcesCount;
+  const isSelective = selectedSourceIds.length > 0 && selectedSourceIds.length < totalSourcesCount;
+  const selectedTitles = selectedSources.map((s) => s.title).join(", ");
 
   // Model & search settings
   const [selectedModel, setSelectedModel] = useState<ChatModel>(defaultModel);
@@ -98,6 +108,7 @@ export function ChatStudio({
 
   // Close conversation switcher dropdown on outside click
   useEffect(() => {
+    if (!convDropdownOpen) return;
     function handleClickOutside(event: MouseEvent) {
       if (convDropdownRef.current && !convDropdownRef.current.contains(event.target as Node)) {
         setConvDropdownOpen(false);
@@ -105,7 +116,7 @@ export function ChatStudio({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [convDropdownOpen]);
 
   // Auto scroll down (smooth when idle, instant auto during active streaming to prevent jitter)
   const scrollToBottom = () => {
@@ -174,6 +185,7 @@ export function ChatStudio({
         messages: currentMessages,
         model: selectedModel,
         webSearch: webSearchEnabled,
+        sourceIds: selectedSourceIds.length > 0 ? selectedSourceIds : undefined,
         signal: controller.signal,
         onChunk: (chunk) => {
           pushChunk(chunk);
@@ -202,92 +214,13 @@ export function ChatStudio({
   };
 
   return (
-    <div className="flex h-full bg-background text-foreground overflow-hidden">
-      {/* Collapsible Conversation History Sidebar */}
-      {showConvSidebar && (
-        <aside className="w-60 shrink-0 flex flex-col border-r border-border bg-surface-secondary/40 backdrop-blur-xs">
-          <div className="flex items-center justify-between p-3 border-b border-border">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 font-mono">
-              <MessageSquare className="h-3.5 w-3.5 text-accent" />
-              Chat History
-            </span>
-
-            <button
-              type="button"
-              onClick={handleCreateNewConversation}
-              disabled={createConversationMutation.isPending}
-              className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
-              title="New Chat"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {conversations && conversations.length > 0 ? (
-              conversations.map((conv) => {
-                const isActive = activeConversationId === conv.id;
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => setActiveConversationId(conv.id)}
-                    className={`group flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-surface text-foreground border border-border font-semibold shadow-2xs"
-                        : "text-foreground-secondary hover:bg-surface-secondary/70 hover:text-foreground border border-transparent"
-                    }`}
-                  >
-                    <span className="truncate flex-1 pr-2 text-xs">
-                      {conv.title || "Untitled Chat"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConvToDelete({ id: conv.id, title: conv.title || "Untitled Chat" });
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error hover:bg-error/10 rounded-md transition-all cursor-pointer"
-                      title="Delete chat session"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="p-4 text-center text-xs text-muted">
-                No past chat history.
-              </div>
-            )}
-          </div>
-        </aside>
-      )}
-
+    <div className="flex h-full flex-col bg-background text-foreground overflow-hidden">
       {/* Main Research Conversation Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
         {/* Chat Control Toolbar */}
         <div className="flex items-center justify-between border-b border-border px-3 sm:px-4 py-2 bg-surface/90 backdrop-blur-md shrink-0 gap-2">
           {/* Left: New Chat CTA & Conversation Switcher Dropdown */}
           <div className="flex items-center gap-2 min-w-0">
-            {/* Desktop persistent sidebar toggle */}
-            <button
-              type="button"
-              onClick={() => setShowConvSidebar(!showConvSidebar)}
-              className={`hidden md:flex p-1.5 rounded-lg border transition-colors cursor-pointer subtle-focus ${
-                showConvSidebar
-                  ? "border-accent/40 bg-accent-subtle text-accent"
-                  : "border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary"
-              }`}
-              title={showConvSidebar ? "Hide Chat Sidebar" : "Pin Chat History Sidebar"}
-              aria-label={showConvSidebar ? "Hide Chat Sidebar" : "Pin Chat History Sidebar"}
-            >
-              {showConvSidebar ? (
-                <PanelLeftClose className="h-3.5 w-3.5" />
-              ) : (
-                <PanelLeftOpen className="h-3.5 w-3.5" />
-              )}
-            </button>
-
             {/* Prominent "+ New Chat" Button */}
             <button
               type="button"
@@ -308,8 +241,11 @@ export function ChatStudio({
             <div className="relative min-w-0" ref={convDropdownRef}>
               <button
                 type="button"
-                onClick={() => setConvDropdownOpen(!convDropdownOpen)}
-                className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-border/80 bg-surface hover:bg-surface-secondary text-xs font-medium text-foreground transition-all cursor-pointer subtle-focus max-w-[150px] xs:max-w-[200px] sm:max-w-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConvDropdownOpen((prev) => !prev);
+                }}
+                className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-border/80 bg-surface hover:bg-surface-secondary text-xs font-medium text-foreground transition-all cursor-pointer subtle-focus max-w-[160px] xs:max-w-[200px] sm:max-w-xs"
                 aria-expanded={convDropdownOpen}
                 aria-haspopup="listbox"
                 title="Switch active conversation thread"
@@ -318,11 +254,14 @@ export function ChatStudio({
                 <span className="truncate">
                   {conversations?.find((c) => c.id === activeConversationId)?.title || "Active Thread"}
                 </span>
-                <ChevronDown className="h-3 w-3 text-muted shrink-0 ml-0.5" />
+                <ChevronDown className={`h-3 w-3 text-muted shrink-0 ml-0.5 transition-transform duration-150 ${convDropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
               {convDropdownOpen && (
-                <div className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] rounded-xl border border-border bg-surface p-1.5 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                <div
+                  className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] rounded-xl border border-border bg-surface p-1.5 shadow-xl z-50 animate-in fade-in-50 zoom-in-95"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/60 mb-1">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-muted font-bold">
                       Threads ({conversations?.length || 0})
@@ -338,36 +277,44 @@ export function ChatStudio({
                       <Plus className="h-3 w-3" /> New
                     </button>
                   </div>
-                  <div className="max-h-60 overflow-y-auto space-y-0.5">
+                  <div className="max-h-64 overflow-y-auto space-y-0.5">
                     {conversations && conversations.length > 0 ? (
-                      conversations.map((conv) => (
-                        <div
-                          key={conv.id}
-                          onClick={() => {
-                            setActiveConversationId(conv.id);
-                            setConvDropdownOpen(false);
-                          }}
-                          className={`group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer ${
-                            activeConversationId === conv.id
-                              ? "bg-accent-subtle text-accent font-semibold"
-                              : "text-foreground-secondary hover:bg-surface-secondary hover:text-foreground"
-                          }`}
-                        >
-                          <span className="truncate flex-1 pr-2">{conv.title || "Untitled Chat"}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConvToDelete({ id: conv.id, title: conv.title || "Untitled Chat" });
+                      conversations.map((conv) => {
+                        const isActive = activeConversationId === conv.id;
+                        return (
+                          <div
+                            key={conv.id}
+                            onClick={() => {
+                              setActiveConversationId(conv.id);
                               setConvDropdownOpen(false);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error rounded transition-opacity"
-                            title="Delete thread"
+                            className={`group flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-colors cursor-pointer ${
+                              isActive
+                                ? "bg-accent-subtle text-accent font-semibold"
+                                : "text-foreground-secondary hover:bg-surface-secondary hover:text-foreground"
+                            }`}
                           >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))
+                            <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                              {isActive && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                              )}
+                              <span className="truncate">{conv.title || "Untitled Chat"}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConvToDelete({ id: conv.id, title: conv.title || "Untitled Chat" });
+                                setConvDropdownOpen(false);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error rounded transition-opacity"
+                              title="Delete thread"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="px-3 py-4 text-center text-xs text-muted">No conversations yet.</p>
                     )}
@@ -375,6 +322,27 @@ export function ChatStudio({
                 </div>
               )}
             </div>
+
+            {/* Selective Grounding Header Pill */}
+            {isSelective && (
+              <div className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-accent-subtle/80 border border-accent/30 px-2 py-1 text-[11px] text-accent font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+                <span className="shrink-0 font-semibold">Grounding:</span>
+                <span className="truncate max-w-[120px] md:max-w-[180px]" title={selectedTitles}>
+                  {selectedTitles}
+                </span>
+                {onClearSourceSelection && (
+                  <button
+                    type="button"
+                    onClick={onClearSourceSelection}
+                    className="hover:text-foreground text-muted cursor-pointer font-bold ml-0.5 text-xs"
+                    title="Reset to all sources"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Model Selector & Web Search */}
@@ -596,6 +564,26 @@ export function ChatStudio({
             onSubmit={handleSendMessage}
             className="max-w-3xl mx-auto relative rounded-2xl border border-border bg-surface-secondary/40 p-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all shadow-2xs"
           >
+            {isSelective && (
+              <div className="flex items-center justify-between px-2 pb-1.5 text-[11px] border-b border-border/40 mb-1">
+                <div className="flex items-center gap-1.5 text-accent min-w-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+                  <span className="truncate">
+                    Chatting with: <strong className="font-semibold">{selectedTitles}</strong>
+                  </span>
+                </div>
+                {onClearSourceSelection && (
+                  <button
+                    type="button"
+                    onClick={onClearSourceSelection}
+                    className="text-[10px] text-muted hover:text-foreground underline cursor-pointer shrink-0 ml-2"
+                  >
+                    Chat with all
+                  </button>
+                )}
+              </div>
+            )}
+
             <textarea
               rows={2}
               value={inputMessage}
@@ -606,16 +594,25 @@ export function ChatStudio({
                   handleSendMessage();
                 }
               }}
-              placeholder="Ask anything about your sources (Enter to send, Shift+Enter for newline)..."
+              placeholder={
+                isSelective
+                  ? `Ask questions focused on ${selectedTitles}...`
+                  : "Ask anything about your sources (Enter to send, Shift+Enter for newline)..."
+              }
               className="w-full resize-none border-none bg-transparent px-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none"
             />
 
             <div className="flex items-center justify-between pt-1 px-2">
               <div className="flex items-center gap-2 text-[10px] font-mono">
-                {sourcesCount > 0 ? (
+                {isSelective ? (
+                  <span className="inline-flex items-center gap-1.5 text-accent font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                    Focused on {selectedSourceIds.length} of {totalSourcesCount} {totalSourcesCount === 1 ? "source" : "sources"}
+                  </span>
+                ) : totalSourcesCount > 0 ? (
                   <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Grounded in {sourcesCount} {sourcesCount === 1 ? "source" : "sources"}
+                    Grounded in all {totalSourcesCount} sources
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-amber-500 font-medium">
