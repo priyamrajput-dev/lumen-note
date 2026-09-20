@@ -63,15 +63,15 @@ class WorspaceController {
     AppResponse.created(res, "Workspace created successfully", workspace);
   }
 
-  async updateWorspace(req: Request, res: Response) {
+  async updateWorkspace(req: Request, res: Response) {
     const input = this.parseUpdateBody(req.body);
     const { workspaceId } = this.parseWorkspaceId(req.params);
-    const worspace = await this.workspaceService.updateWorkspaceForUser(
+    const workspace = await this.workspaceService.updateWorkspaceForUser(
       input,
       req.session.user.id,
       workspaceId,
     );
-    AppResponse.ok(res, "Workspace updated successfully", worspace);
+    AppResponse.ok(res, "Workspace updated successfully", workspace);
   }
 
   async deleteWorkspace(req: Request, res: Response) {
