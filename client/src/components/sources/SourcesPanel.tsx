@@ -119,21 +119,21 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
     switch (status) {
       case "READY":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-1.5 py-0.2 text-[9px] font-mono font-medium text-success border border-success/20">
+          <span className="inline-flex items-center gap-1 rounded-md bg-success-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-success border border-success/20">
             <CheckCircle2 className="h-2.5 w-2.5" />
             Ready
           </span>
         );
       case "PROCESSING":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-1.5 py-0.2 text-[9px] font-mono font-medium text-accent border border-accent/25">
+          <span className="inline-flex items-center gap-1 rounded-md bg-primary-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-primary border border-primary/25">
             <Loader2 className="h-2.5 w-2.5 animate-spin" />
             Indexing
           </span>
         );
       case "FAILED":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-error/10 px-1.5 py-0.2 text-[9px] font-mono font-medium text-error border border-error/20">
+          <span className="inline-flex items-center gap-1 rounded-md bg-error-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-error border border-error/20">
             <AlertTriangle className="h-2.5 w-2.5" />
             Failed
           </span>
@@ -141,7 +141,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       case "PENDING":
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-1.5 py-0.2 text-[9px] font-mono font-medium text-warning border border-warning/20">
+          <span className="inline-flex items-center gap-1 rounded-md bg-warning-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-warning border border-warning/20">
             <Loader2 className="h-2.5 w-2.5 animate-spin" />
             Queued
           </span>
@@ -152,12 +152,12 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
   return (
     <div className="flex h-full flex-col bg-surface/40 text-foreground overflow-hidden">
       {/* Top Header & Action */}
-      <div className="flex items-center justify-between gap-2 border-b border-border px-3.5 py-2.5 bg-surface/90 shrink-0">
+      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-3.5 py-2.5 bg-surface/90 shrink-0 shadow-2xs">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
             Sources
           </span>
-          <span className="text-[10px] font-mono font-medium rounded-full bg-surface-secondary text-muted px-1.5 py-0.2 border border-border">
+          <span className="text-[10px] font-mono font-medium rounded-md bg-surface-secondary text-muted px-1.5 py-0.5 border border-border/70">
             {sources?.length || 0}
           </span>
         </div>
@@ -168,8 +168,9 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
               type="button"
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={bulkDeleteMutation.isPending}
-              className="inline-flex items-center gap-1 rounded-lg bg-error/10 border border-error/20 px-2.5 py-1 text-[10px] font-medium text-error hover:bg-error/20 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 h-7 rounded-lg bg-error/10 border border-error/20 px-2 text-[10px] font-medium text-error hover:bg-error/20 transition-colors cursor-pointer subtle-focus"
               title="Delete selected sources"
+              aria-label={`Delete ${selectedIds.length} selected sources`}
             >
               <Trash2 className="h-3 w-3" />
               <span>Delete ({selectedIds.length})</span>
@@ -179,7 +180,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-semibold text-white shadow-2xs hover:bg-accent-hover transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer subtle-focus"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add</span>
@@ -188,7 +189,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="border-b border-border p-2 space-y-2 bg-surface/40 shrink-0">
+      <div className="border-b border-border/70 p-2 space-y-2 bg-surface/40 shrink-0">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
@@ -204,7 +205,8 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                 (e.target.value as SourceType) || undefined,
               )
             }
-            className="flex-1 rounded border border-border bg-surface px-2 py-1 text-[10px] font-mono text-foreground focus:border-accent focus:outline-none"
+            className="flex-1 h-7 rounded-lg border border-border/80 bg-surface px-2 text-[10px] font-mono text-foreground subtle-focus"
+            aria-label="Filter by source type"
           >
             <option value="">All Types</option>
             <option value="PDF">PDF Documents</option>
@@ -221,11 +223,12 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                 (e.target.value as SourceStatus) || undefined,
               )
             }
-            className="rounded border border-border bg-surface px-1.5 py-1 text-[10px] font-mono text-foreground focus:border-accent focus:outline-none"
+            className="h-7 rounded-lg border border-border/80 bg-surface px-2 text-[10px] font-mono text-foreground subtle-focus"
+            aria-label="Filter by source status"
           >
             <option value="">All Status</option>
             <option value="READY">Ready</option>
-            <option value="PROCESSING">Processing</option>
+            <option value="PROCESSING">Indexing</option>
             <option value="FAILED">Failed</option>
           </select>
         </div>
@@ -234,35 +237,35 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       {/* Sources List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
         {isLoading && (
-          <div className="space-y-2 p-2">
+          <div className="space-y-2 p-1">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-14 rounded-xl border border-border/60 bg-surface animate-pulse"
+                className="h-14 rounded-lg border border-border/60 bg-surface/50 animate-pulse"
               />
             ))}
           </div>
         )}
 
         {isError && (
-          <div className="rounded-xl border border-error/30 bg-error/10 p-3 text-xs text-error">
+          <div className="rounded-lg border border-error/30 bg-error/10 p-3 text-xs text-error">
             Failed to load workspace sources.
           </div>
         )}
 
         {!isLoading && !isError && sources?.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/50 py-10 px-4 text-center my-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent mb-2.5">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/40 py-10 px-4 text-center my-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border text-accent mb-2.5 shadow-2xs">
               <FileUp className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-foreground">No sources added</h4>
-            <p className="mt-1 text-[11px] text-muted leading-tight">
+            <p className="mt-1 text-[11px] text-foreground-secondary leading-tight max-w-[200px]">
               Ingest a PDF paper, web article, or video transcript to ground your research.
             </p>
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
-              className="mt-3 inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-semibold text-white hover:bg-accent-hover transition-colors cursor-pointer"
+              className="mt-3 inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer subtle-focus"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Add Source</span>
@@ -277,7 +280,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="flex items-center gap-1.5 hover:text-foreground cursor-pointer"
+                className="flex items-center gap-1.5 hover:text-foreground cursor-pointer subtle-focus rounded"
               >
                 {allSelected ? (
                   <CheckSquare className="h-3.5 w-3.5 text-accent" />
@@ -293,17 +296,18 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
               return (
                 <div
                   key={src.id}
-                  className={`group relative flex flex-col rounded-xl border p-2.5 transition-all text-xs ${
+                  className={`@container group relative flex flex-col rounded-lg border p-2.5 transition-all text-xs ${
                     isSelected
                       ? "border-accent/60 bg-accent-subtle/50"
-                      : "border-border bg-surface hover:border-border/80 hover:bg-surface-secondary/40 shadow-2xs"
+                      : "border-border/80 bg-surface hover:border-border hover:bg-surface-secondary/40 shadow-2xs"
                   }`}
                 >
                   <div className="flex items-start gap-2">
                     <button
                       type="button"
                       onClick={() => toggleSelectOne(src.id)}
-                      className="text-muted hover:text-foreground mt-0.5 shrink-0 cursor-pointer"
+                      className="text-muted hover:text-foreground mt-0.5 shrink-0 cursor-pointer subtle-focus rounded"
+                      aria-label={`Select source ${src.title}`}
                     >
                       {isSelected ? (
                         <CheckSquare className="h-3.5 w-3.5 text-accent" />
@@ -312,7 +316,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                       )}
                     </button>
 
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-secondary border border-border">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-secondary border border-border/70">
                       {getSourceIcon(src.type)}
                     </div>
 
@@ -321,21 +325,22 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                         <button
                           type="button"
                           onClick={() => setPreviewSource(src)}
-                          className="font-medium text-foreground hover:text-accent truncate text-left transition-colors text-xs cursor-pointer block max-w-[160px]"
+                          className="font-medium text-foreground hover:text-accent truncate text-left transition-colors text-xs cursor-pointer block max-w-[160px] subtle-focus"
                           title={src.title}
                         >
                           {src.title}
                         </button>
 
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setPreviewSource(src);
                             }}
-                            className="p-1 rounded text-muted hover:text-foreground hover:bg-surface-secondary cursor-pointer"
+                            className="flex items-center justify-center h-6 w-6 rounded text-muted hover:text-foreground hover:bg-surface-secondary cursor-pointer subtle-focus"
                             title="Preview document"
+                            aria-label={`Preview document ${src.title}`}
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
@@ -345,8 +350,9 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                               e.stopPropagation();
                               setSourceToDelete({ id: src.id, title: src.title });
                             }}
-                            className="p-1 rounded text-muted hover:text-error hover:bg-error/10 cursor-pointer"
+                            className="flex items-center justify-center h-6 w-6 rounded text-muted hover:text-error hover:bg-error/10 cursor-pointer subtle-focus"
                             title="Delete source"
+                            aria-label={`Delete source ${src.title}`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -354,7 +360,7 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
                       </div>
 
                       <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono text-muted">
-                        <span className="rounded bg-surface-secondary px-1 py-0.2 border border-border">
+                        <span className="rounded bg-surface-secondary px-1 py-0.2 border border-border/70">
                           {src.type}
                         </span>
 
@@ -379,14 +385,15 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
       {/* Source Preview Drawer */}
       <SourcePreviewDrawer
         source={previewSource}
+        isOpen={Boolean(previewSource)}
         onClose={() => setPreviewSource(null)}
       />
 
-      {/* Single Source Delete Confirmation Dialog */}
+      {/* Single Delete Confirm */}
       <ConfirmDialog
         isOpen={Boolean(sourceToDelete)}
-        title="Delete Source"
-        description={`Are you sure you want to delete "${sourceToDelete?.title}"? All vectorized chunks and embeddings for this source will be permanently removed.`}
+        title="Delete Source Document"
+        description={`Are you sure you want to remove "${sourceToDelete?.title}"? All vector embeddings and semantic citations associated with this document will be purged.`}
         confirmLabel="Delete Source"
         variant="danger"
         isLoading={deleteSourceMutation.isPending}
@@ -394,14 +401,12 @@ export function SourcesPanel({ workspaceId, isCompact = false }: SourcesPanelPro
         onClose={() => setSourceToDelete(null)}
       />
 
-      {/* Bulk Delete Confirmation Dialog */}
+      {/* Bulk Delete Confirm */}
       <ConfirmDialog
         isOpen={showBulkDeleteConfirm}
-        title="Delete Selected Sources"
-        description={`Are you sure you want to delete ${selectedIds.length} selected source${
-          selectedIds.length > 1 ? "s" : ""
-        }? This operation cannot be undone.`}
-        confirmLabel={`Delete ${selectedIds.length} Sources`}
+        title="Delete Multiple Sources"
+        description={`Are you sure you want to delete all ${selectedIds.length} selected source documents? This action cannot be reversed.`}
+        confirmLabel="Delete Selected"
         variant="danger"
         isLoading={bulkDeleteMutation.isPending}
         onConfirm={handleConfirmBulkDelete}

@@ -34,33 +34,33 @@ export function LandingPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden selection:bg-accent-subtle selection:text-foreground">
+    <div className="relative min-h-[calc(100dvh-3.5rem)] bg-background text-foreground overflow-x-hidden selection:bg-accent-subtle selection:text-foreground">
       {/* Subtle Ambient Glow and Technical Grid */}
       <div className="absolute inset-0 bg-technical-grid opacity-60 pointer-events-none" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[750px] sm:w-[900px] h-[450px] bg-radial from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[min(100vw,55rem)] h-[28rem] bg-radial from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 pt-12 sm:pt-16 pb-24 sm:px-6 lg:px-8">
+      <main className="relative z-10 page-container pt-12 sm:pt-16 pb-24">
         {/* Top Announcement Pill */}
-        <div className="flex justify-center animate-in fade-in slide-in-from-top-3 duration-300">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-4 py-1 text-xs font-medium text-foreground-secondary shadow-xs hover:border-accent/40 transition-colors">
+        <div className="flex justify-center animate-in fade-in slide-in-from-top-3 duration-200">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/80 backdrop-blur-md px-3.5 sm:px-4 py-1 text-xs font-medium text-foreground-secondary shadow-xs hover:border-accent/40 transition-colors">
             <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
             <span className="tracking-wide uppercase text-[10px] font-mono font-bold text-foreground">
               AI-Powered Research Workspace
             </span>
-            <span className="text-muted">•</span>
-            <span className="text-accent font-medium text-[11px]">Grounded in your sources</span>
+            <span className="text-muted hidden sm:inline">•</span>
+            <span className="text-accent font-medium text-[11px] hidden sm:inline">Grounded in your sources</span>
           </div>
         </div>
 
         {/* Hero Headline & Subtitle */}
-        <div className="mt-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl md:text-7xl text-foreground max-w-4xl mx-auto leading-[1.08]">
+        <div className="mt-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <h1 className="fluid-display text-foreground max-w-4xl mx-auto leading-tight">
             Turn your sources into{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-amber-500 to-accent-hover">
               understanding.
             </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-foreground-secondary leading-relaxed">
+          <p className="mx-auto mt-6 max-w-2xl text-sm sm:text-base md:text-lg text-foreground-secondary leading-relaxed">
             Bring documents, lecture transcripts, web pages, and notes into an intelligent research notebook. Ask questions, discover deep connections, and study with grounded AI.
           </p>
 
@@ -70,12 +70,12 @@ export function LandingPage() {
               type="button"
               onClick={handleSignIn}
               disabled={loading}
-              className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-accent px-8 py-4 text-base font-semibold text-white hover:bg-accent-hover shadow-lg hover:shadow-accent-glow transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-75"
+              className="group relative inline-flex items-center justify-center gap-3 h-12 rounded-xl bg-primary px-8 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-accent-glow transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer disabled:opacity-75 subtle-focus"
             >
               {loading ? (
                 <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
               ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -100,7 +100,7 @@ export function LandingPage() {
           </div>
 
           {/* Trust Points */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-muted font-mono">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-muted font-mono">
             <span className="flex items-center gap-1.5">
               <Lock className="h-3 w-3 text-muted" />
               Isolated Workspace Security
@@ -122,18 +122,18 @@ export function LandingPage() {
         <div className="mt-14 rounded-2xl border border-border/80 bg-surface shadow-2xl overflow-hidden glass-panel">
           {/* Mock Window Top Bar */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-secondary/60">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex gap-1.5 shrink-0">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
               </div>
-              <span className="ml-2 text-[11px] font-mono font-medium text-muted">
+              <span className="ml-2 text-[11px] font-mono font-medium text-muted truncate">
                 workspace / attention-mechanisms-research
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <span className="inline-flex items-center gap-1 rounded-md bg-surface px-2 py-0.5 text-[10px] font-mono text-muted border border-border">
                 <Cpu className="h-2.5 w-2.5 text-accent" />
                 gpt-4o-mini
@@ -154,7 +154,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs">
                     <div className="flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5 text-rose-500 shrink-0" />
                       <span className="font-semibold text-foreground truncate">
@@ -167,7 +167,7 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs">
                     <div className="flex items-center gap-2">
                       <Globe className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                       <span className="font-semibold text-foreground truncate">
@@ -180,7 +180,7 @@ export function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs">
                     <div className="flex items-center gap-2">
                       <FileCode className="h-3.5 w-3.5 text-accent shrink-0" />
                       <span className="font-semibold text-foreground truncate">
@@ -208,7 +208,7 @@ export function LandingPage() {
                   <div className="h-6 w-6 rounded-lg bg-surface-secondary border border-border flex items-center justify-center text-foreground font-mono text-[10px] mt-0.5">
                     <User className="h-3.5 w-3.5 text-muted" />
                   </div>
-                  <div className="flex-1 rounded-2xl bg-surface-secondary/70 border border-border p-3 text-foreground leading-relaxed text-[11px]">
+                  <div className="flex-1 rounded-xl bg-surface-secondary/70 border border-border p-3 text-foreground leading-relaxed text-[11px]">
                     How does multi-head self-attention overcome sequential bottlenecks in recurrence?
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export function LandingPage() {
                   <div className="h-6 w-6 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent font-mono text-[10px] mt-0.5">
                     <Bot className="h-3.5 w-3.5" />
                   </div>
-                  <div className="flex-1 rounded-2xl bg-surface border border-border p-3.5 text-foreground-secondary leading-relaxed text-[11px] shadow-2xs space-y-2">
+                  <div className="flex-1 rounded-xl bg-surface border border-border p-3.5 text-foreground-secondary leading-relaxed text-[11px] shadow-2xs space-y-2">
                     <p>
                       Multi-head attention dispenses entirely with recurrence, computing pairwise token representations in parallel across all sequence positions.
                     </p>
@@ -239,10 +239,10 @@ export function LandingPage() {
 
               {/* Chat Command Input Box Mockup */}
               <div className="mt-4 pt-3 border-t border-border">
-                <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-secondary/40 px-3 py-2 text-muted">
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-secondary/40 px-3 py-2 text-muted">
                   <Search className="h-3.5 w-3.5 text-muted" />
-                  <span className="text-[11px] flex-1">Ask anything about your sources...</span>
-                  <span className="text-[10px] font-mono rounded-lg bg-surface px-2 py-0.5 border border-border text-foreground font-semibold">
+                  <span className="text-[11px] flex-1 truncate">Ask anything about your sources...</span>
+                  <span className="text-[10px] font-mono rounded-md bg-surface px-2 py-0.5 border border-border text-foreground font-semibold shrink-0">
                     Ask →
                   </span>
                 </div>
@@ -254,13 +254,13 @@ export function LandingPage() {
               <div>
                 <div className="flex items-center justify-between pb-2 border-b border-border mb-2.5">
                   <span className="font-mono text-[10px] uppercase font-bold text-muted tracking-wider">
-                    Notes & Artifacts
+                    Notes &amp; Artifacts
                   </span>
                   <span className="text-[10px] font-semibold text-accent">+ Generate</span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs card-hover">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs card-hover">
                     <div className="flex items-center gap-1.5 text-[10px] font-mono text-accent font-semibold uppercase">
                       <Sparkles className="h-3 w-3" />
                       <span>3D Flashcards</span>
@@ -271,7 +271,7 @@ export function LandingPage() {
                     <p className="text-[10px] text-muted mt-0.5">8 active study cards</p>
                   </div>
 
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs card-hover">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs card-hover">
                     <div className="flex items-center gap-1.5 text-[10px] font-mono text-success font-semibold uppercase">
                       <HelpCircle className="h-3 w-3" />
                       <span>Interactive Quiz</span>
@@ -282,7 +282,7 @@ export function LandingPage() {
                     <p className="text-[10px] text-muted mt-0.5">5 questions • Explanations</p>
                   </div>
 
-                  <div className="p-2.5 rounded-xl border border-border bg-surface shadow-2xs card-hover">
+                  <div className="p-2.5 rounded-lg border border-border bg-surface shadow-2xs card-hover">
                     <div className="flex items-center gap-1.5 text-[10px] font-mono text-blue-500 font-semibold uppercase">
                       <Network className="h-3 w-3" />
                       <span>Concept Mind Map</span>
@@ -305,34 +305,34 @@ export function LandingPage() {
         {/* Section: How It Works */}
         <section className="mt-24 pt-10 border-t border-border">
           <div className="text-center max-w-xl mx-auto mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="fluid-h2 text-foreground tracking-tight">
               How Lumen Note Works
             </h2>
-            <p className="mt-2 text-sm text-foreground-secondary">
+            <p className="mt-2 text-xs sm:text-sm text-foreground-secondary leading-relaxed">
               A frictionless workflow designed for deep research, synthesis, and sustained knowledge retention.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="p-6 rounded-2xl border border-border bg-surface/60 space-y-3 card-hover">
+            <div className="p-6 rounded-xl border border-border bg-surface/60 space-y-3 card-hover shadow-2xs">
               <span className="text-3xl font-mono font-extrabold text-accent">01</span>
-              <h3 className="text-base font-bold text-foreground">Ingest your sources</h3>
+              <h3 className="fluid-h3 text-foreground">Ingest your sources</h3>
               <p className="text-xs sm:text-sm text-foreground-secondary leading-relaxed">
                 Upload PDFs, research papers, web URLs, YouTube video transcripts, and custom markdown notes. Everything is vectorized and chunked for semantic retrieval.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl border border-border bg-surface/60 space-y-3 card-hover">
+            <div className="p-6 rounded-xl border border-border bg-surface/60 space-y-3 card-hover shadow-2xs">
               <span className="text-3xl font-mono font-extrabold text-accent">02</span>
-              <h3 className="text-base font-bold text-foreground">Interrogate and explore</h3>
+              <h3 className="fluid-h3 text-foreground">Interrogate and explore</h3>
               <p className="text-xs sm:text-sm text-foreground-secondary leading-relaxed">
                 Chat with streaming AI grounded in your workspace. Every answer is substantiated with exact passages, page numbers, and similarity rankings.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl border border-border bg-surface/60 space-y-3 card-hover">
+            <div className="p-6 rounded-xl border border-border bg-surface/60 space-y-3 card-hover shadow-2xs">
               <span className="text-3xl font-mono font-extrabold text-accent">03</span>
-              <h3 className="text-base font-bold text-foreground">Build durable understanding</h3>
+              <h3 className="fluid-h3 text-foreground">Build durable understanding</h3>
               <p className="text-xs sm:text-sm text-foreground-secondary leading-relaxed">
                 Transform discoveries into long-term retention with auto-generated 3D flashcard decks, interactive comprehension quizzes, and structured briefs.
               </p>
@@ -343,76 +343,76 @@ export function LandingPage() {
         {/* Section: Features Grid */}
         <section className="mt-24 pt-10 border-t border-border">
           <div className="text-center max-w-xl mx-auto mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="fluid-h2 text-foreground tracking-tight">
               Built for Deep Knowledge Work
             </h2>
-            <p className="mt-2 text-sm text-foreground-secondary">
+            <p className="mt-2 text-xs sm:text-sm text-foreground-secondary leading-relaxed">
               Engineered with modern AI primitives to ensure precision, transparency, and persistent memory.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="intrinsic-grid-cards">
             {/* Feature 1 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <Quote className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">Source-Grounded AI</h4>
+              <h3 className="fluid-h3 text-foreground">Source-Grounded AI</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
                 Answers are anchored directly to your uploaded materials, preventing hallucinations and providing verifiable evidence.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">Verifiable Citations</h4>
+              <h3 className="fluid-h3 text-foreground">Verifiable Citations</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
                 Click any citation badge to open the document reader, inspect exact page numbers, and verify source excerpts instantly.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <Layers className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">Multi-Modal Ingestion</h4>
+              <h3 className="fluid-h3 text-foreground">Multi-Modal Ingestion</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
                 Ingest PDF papers up to 10MB, live website documentation, YouTube video transcripts, or draft live markdown notes.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <Sparkles className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">3D Study Flashcards</h4>
+              <h3 className="fluid-h3 text-foreground">3D Study Flashcards</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
-                Active recall study flashcards automatically synthesized from your sources with smooth 3D flipping and keyboard shortcuts.
+                Active recall study flashcards automatically synthesized from your sources with smooth 3D flipping and keyboard navigation.
               </p>
             </div>
 
             {/* Feature 5 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <HelpCircle className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">Interactive Assessments</h4>
+              <h3 className="fluid-h3 text-foreground">Interactive Assessments</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
                 Self-test your comprehension with interactive multiple-choice quizzes complete with immediate scoring and explanations.
               </p>
             </div>
 
             {/* Feature 6 */}
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-3 card-hover">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+            <div className="p-6 rounded-xl border border-border bg-surface space-y-3 card-hover shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent border border-accent/20">
                 <Network className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-foreground">Persistent Memory</h4>
+              <h3 className="fluid-h3 text-foreground">Persistent Memory</h3>
               <p className="text-xs text-foreground-secondary leading-relaxed">
                 Powered by Mem0. Lumen Note remembers your research guidelines, key preferences, and study history across sessions.
               </p>
@@ -421,9 +421,9 @@ export function LandingPage() {
         </section>
 
         {/* Bottom CTA Banner */}
-        <section className="mt-24 p-8 sm:p-12 rounded-3xl border border-border bg-surface text-center space-y-4 shadow-xl glass-panel relative overflow-hidden">
+        <section className="mt-24 p-8 sm:p-12 rounded-2xl border border-border bg-surface text-center space-y-4 shadow-xl glass-panel relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-accent/15 to-transparent blur-2xl pointer-events-none" />
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+          <h2 className="fluid-h1 text-foreground tracking-tight">
             Ready to research with clarity?
           </h2>
           <p className="text-xs sm:text-sm text-foreground-secondary max-w-md mx-auto leading-relaxed">
@@ -434,7 +434,7 @@ export function LandingPage() {
               type="button"
               onClick={handleSignIn}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover text-white px-6 py-3 text-xs font-semibold shadow-md hover:shadow-accent-glow transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-6 text-xs sm:text-sm font-semibold shadow-md hover:shadow-accent-glow transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer subtle-focus"
             >
               <span>Get Started with Google</span>
               <ArrowRight className="h-4 w-4" />
