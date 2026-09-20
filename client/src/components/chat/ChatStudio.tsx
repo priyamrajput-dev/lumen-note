@@ -29,21 +29,31 @@ import {
   PanelLeftOpen,
   Square,
   CornerDownLeft,
+  ChevronDown,
 } from "lucide-react";
 
 interface ChatStudioProps {
   workspaceId: string;
   defaultModel?: ChatModel;
+  sourcesCount?: number;
+  onNavigateToSources?: () => void;
 }
 
-export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatStudioProps) {
+export function ChatStudio({
+  workspaceId,
+  defaultModel = "gpt-4o-mini",
+  sourcesCount = 0,
+  onNavigateToSources,
+}: ChatStudioProps) {
   const { data: conversations, refetch: refetchConversations } = useConversations(workspaceId);
   const createConversationMutation = useCreateConversation(workspaceId);
   const deleteConversationMutation = useDeleteConversation(workspaceId);
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showConvSidebar, setShowConvSidebar] = useState(false);
+  const [convDropdownOpen, setConvDropdownOpen] = useState(false);
   const [convToDelete, setConvToDelete] = useState<{ id: string; title: string } | null>(null);
+  const convDropdownRef = useRef<HTMLDivElement>(null);
 
   // Model & search settings
   const [selectedModel, setSelectedModel] = useState<ChatModel>(defaultModel);
@@ -78,6 +88,17 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
       setActiveConversationId(conversations[0].id);
     }
   }, [conversations, activeConversationId]);
+
+  // Close conversation switcher dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (convDropdownRef.current && !convDropdownRef.current.contains(event.target as Node)) {
+        setConvDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Auto scroll down
   const scrollToBottom = () => {
@@ -239,40 +260,127 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
       {/* Main Research Conversation Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
         {/* Chat Control Toolbar */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-surface/80 shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between border-b border-border px-3 sm:px-4 py-2 bg-surface/90 backdrop-blur-md shrink-0 gap-2">
+          {/* Left: New Chat CTA & Conversation Switcher Dropdown */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Desktop persistent sidebar toggle */}
             <button
               type="button"
               onClick={() => setShowConvSidebar(!showConvSidebar)}
-              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+              className={`hidden md:flex p-1.5 rounded-lg border transition-colors cursor-pointer subtle-focus ${
                 showConvSidebar
-                  ? "border-border bg-surface-secondary text-foreground"
-                  : "border-border bg-surface text-muted hover:text-foreground"
+                  ? "border-accent/40 bg-accent-subtle text-accent"
+                  : "border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary"
               }`}
-              title={showConvSidebar ? "Hide Chat History" : "Show Chat History"}
+              title={showConvSidebar ? "Hide Chat Sidebar" : "Pin Chat History Sidebar"}
+              aria-label={showConvSidebar ? "Hide Chat Sidebar" : "Pin Chat History Sidebar"}
             >
               {showConvSidebar ? (
-                <PanelLeftClose className="h-3.5 w-3.5 text-accent" />
+                <PanelLeftClose className="h-3.5 w-3.5" />
               ) : (
                 <PanelLeftOpen className="h-3.5 w-3.5" />
               )}
             </button>
 
-            <span className="text-xs font-semibold text-foreground truncate max-w-[200px] sm:max-w-xs">
-              {conversations?.find((c) => c.id === activeConversationId)?.title ||
-                "Ask Your Sources"}
-            </span>
+            {/* Prominent "+ New Chat" Button */}
+            <button
+              type="button"
+              onClick={handleCreateNewConversation}
+              disabled={createConversationMutation.isPending}
+              className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-semibold rounded-lg bg-accent text-white hover:bg-accent-hover transition-all cursor-pointer shadow-2xs subtle-focus shrink-0"
+              title="Start a new chat thread"
+            >
+              {createConversationMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Plus className="h-3.5 w-3.5" />
+              )}
+              <span className="hidden sm:inline">New Chat</span>
+            </button>
+
+            {/* Conversation Switcher Dropdown */}
+            <div className="relative min-w-0" ref={convDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setConvDropdownOpen(!convDropdownOpen)}
+                className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-border/80 bg-surface hover:bg-surface-secondary text-xs font-medium text-foreground transition-all cursor-pointer subtle-focus max-w-[150px] xs:max-w-[200px] sm:max-w-xs"
+                aria-expanded={convDropdownOpen}
+                aria-haspopup="listbox"
+                title="Switch active conversation thread"
+              >
+                <MessageSquare className="h-3.5 w-3.5 text-accent shrink-0" />
+                <span className="truncate">
+                  {conversations?.find((c) => c.id === activeConversationId)?.title || "Active Thread"}
+                </span>
+                <ChevronDown className="h-3 w-3 text-muted shrink-0 ml-0.5" />
+              </button>
+
+              {convDropdownOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] rounded-xl border border-border bg-surface p-1.5 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/60 mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-muted font-bold">
+                      Threads ({conversations?.length || 0})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConvDropdownOpen(false);
+                        handleCreateNewConversation();
+                      }}
+                      className="text-[11px] text-accent hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3" /> New
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-0.5">
+                    {conversations && conversations.length > 0 ? (
+                      conversations.map((conv) => (
+                        <div
+                          key={conv.id}
+                          onClick={() => {
+                            setActiveConversationId(conv.id);
+                            setConvDropdownOpen(false);
+                          }}
+                          className={`group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer ${
+                            activeConversationId === conv.id
+                              ? "bg-accent-subtle text-accent font-semibold"
+                              : "text-foreground-secondary hover:bg-surface-secondary hover:text-foreground"
+                          }`}
+                        >
+                          <span className="truncate flex-1 pr-2">{conv.title || "Untitled Chat"}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConvToDelete({ id: conv.id, title: conv.title || "Untitled Chat" });
+                              setConvDropdownOpen(false);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-error rounded transition-opacity"
+                            title="Delete thread"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="px-3 py-4 text-center text-xs text-muted">No conversations yet.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right: Model Selector & Web Search */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Model Selector */}
-            <div className="flex items-center rounded-lg border border-border bg-surface p-0.5 text-xs">
+            <div className="flex items-center rounded-lg border border-border/80 bg-surface p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => setSelectedModel("gpt-4o-mini")}
                 className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono transition-colors cursor-pointer ${
                   selectedModel === "gpt-4o-mini"
-                    ? "bg-surface-secondary text-foreground font-semibold border border-border"
+                    ? "bg-surface-secondary text-foreground font-semibold border border-border/70"
                     : "text-muted hover:text-foreground"
                 }`}
               >
@@ -284,7 +392,7 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
                 onClick={() => setSelectedModel("gpt-4o")}
                 className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono transition-colors cursor-pointer ${
                   selectedModel === "gpt-4o"
-                    ? "bg-surface-secondary text-foreground font-semibold border border-border"
+                    ? "bg-surface-secondary text-foreground font-semibold border border-border/70"
                     : "text-muted hover:text-foreground"
                 }`}
               >
@@ -297,10 +405,10 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
             <button
               type="button"
               onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-              className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-medium transition-all cursor-pointer subtle-focus ${
                 webSearchEnabled
                   ? "border-accent/40 bg-accent-subtle text-accent font-semibold"
-                  : "border-border bg-surface text-muted hover:text-foreground"
+                  : "border-border/80 bg-surface text-muted hover:text-foreground hover:bg-surface-secondary"
               }`}
               title="Toggle real-time web search"
             >
@@ -310,8 +418,32 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
           </div>
         </div>
 
-        {/* Message Thread (Editorial Styling) */}
+        {/* Message Thread */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          {/* Contextual guidance banner when 0 sources are loaded */}
+          {sourcesCount === 0 && (
+            <div className="mx-auto max-w-3xl rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 flex items-center justify-between gap-3 text-xs shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-base shrink-0" aria-hidden="true">💡</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground text-xs">Step 1: Add knowledge sources</p>
+                  <p className="text-foreground-secondary text-[11px] truncate">
+                    Upload PDFs, docs, or web links so Lumen Note can ground answers with citations.
+                  </p>
+                </div>
+              </div>
+              {onNavigateToSources && (
+                <button
+                  type="button"
+                  onClick={onNavigateToSources}
+                  className="shrink-0 rounded-lg bg-surface border border-border px-3 py-1 text-xs font-semibold text-accent hover:bg-surface-secondary hover:border-accent/40 transition-colors cursor-pointer subtle-focus"
+                >
+                  Add Sources →
+                </button>
+              )}
+            </div>
+          )}
+
           {(!serverMessages || serverMessages.length === 0) &&
             !optimisticUserMsg &&
             !streamingText && (
@@ -473,9 +605,18 @@ export function ChatStudio({ workspaceId, defaultModel = "gpt-4o-mini" }: ChatSt
             />
 
             <div className="flex items-center justify-between pt-1 px-2">
-              <div className="flex items-center gap-2 text-[10px] font-mono text-muted">
-                <span className="hidden sm:inline">Grounded in workspace sources</span>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded bg-surface-secondary px-1.5 py-0.5 text-[9px] border border-border">
+              <div className="flex items-center gap-2 text-[10px] font-mono">
+                {sourcesCount > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Grounded in {sourcesCount} {sourcesCount === 1 ? "source" : "sources"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-amber-500 font-medium">
+                    ⚠️ 0 sources loaded
+                  </span>
+                )}
+                <span className="hidden sm:inline-flex items-center gap-1 rounded bg-surface-secondary px-1.5 py-0.5 text-[9px] border border-border text-muted">
                   <CornerDownLeft className="h-2.5 w-2.5" /> Enter
                 </span>
               </div>
