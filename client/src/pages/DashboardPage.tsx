@@ -20,6 +20,7 @@ import {
   AlertCircle,
   RotateCcw,
   Settings,
+  Pencil,
 } from "lucide-react";
 
 export function DashboardPage() {
@@ -247,7 +248,7 @@ export function DashboardPage() {
                         title="Edit workspace"
                         aria-label={`Edit workspace ${ws.title}`}
                       >
-                        <Settings className="h-3.5 w-3.5" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </button>
 
                       <button

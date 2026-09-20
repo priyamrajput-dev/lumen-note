@@ -4,7 +4,7 @@ import { useUpdateWorkspace, useDeleteWorkspace } from "@/api/workspaces";
 import { getErrorMessage } from "@/api/client";
 import type { Workspace, ChatModel } from "@/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { X, Settings, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import { X, Settings, Pencil, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 interface WorkspaceSettingsModalProps {
   workspace: Workspace | null;
@@ -104,11 +104,11 @@ export function WorkspaceSettingsModal({
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-secondary text-muted">
-              <Settings className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-subtle text-accent">
+              <Pencil className="h-3.5 w-3.5" />
             </div>
             <h3 id="workspace-settings-title" className="fluid-h3 text-foreground tracking-tight">
-              Workspace Settings
+              Edit Workspace
             </h3>
           </div>
 
