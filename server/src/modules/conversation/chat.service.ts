@@ -195,6 +195,18 @@ export async function streamWorkspaceChat(
 
   const stream = createUIMessageStream({
     originalMessages: input.messages,
+    onError: (error) => {
+      console.error("Chat streaming error:", error);
+      const msg = error instanceof Error ? error.message : String(error);
+      if (
+        msg.includes("requires more credits") ||
+        msg.includes("402") ||
+        msg.includes("insufficient")
+      ) {
+        return "Model credits limit reached on OpenRouter/OpenAI. Please select gpt-4o-mini or top up OpenRouter credits.";
+      }
+      return msg || "An error occurred during response generation.";
+    },
     execute: async ({ writer }) => {
       const tools = webSearchEnabled
         ? {
@@ -215,15 +227,51 @@ export async function streamWorkspaceChat(
           }
         : undefined;
 
-      const result = streamText({
-        model: getAIModel(chatModel),
-        system: systemPrompt,
-        messages: await convertToModelMessages(contextMessages),
-        tools,
-        stopWhen: webSearchEnabled ? isStepCount(3) : undefined,
-      });
+      const modelToUse = chatModel;
+      let firstChunkEmitted = false;
 
-      writer.merge(toUIMessageStream({ stream: result.stream }));
+      try {
+        const result = streamText({
+          model: getAIModel(modelToUse),
+          system: systemPrompt,
+          messages: await convertToModelMessages(contextMessages),
+          tools,
+          stopWhen: webSearchEnabled ? isStepCount(3) : undefined,
+        });
+
+        const reader = toUIMessageStream({ stream: result.stream }).getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          firstChunkEmitted = true;
+          writer.write(value);
+        }
+      } catch (err: unknown) {
+        if (!firstChunkEmitted && modelToUse !== CHAT_MODEL) {
+          console.warn(
+            `Primary model ${modelToUse} failed before emitting chunks. Falling back to default ${CHAT_MODEL}. Error:`,
+            err instanceof Error ? err.message : err,
+          );
+          const fallbackResult = streamText({
+            model: getAIModel(CHAT_MODEL),
+            system: systemPrompt,
+            messages: await convertToModelMessages(contextMessages),
+            tools,
+            stopWhen: webSearchEnabled ? isStepCount(3) : undefined,
+          });
+
+          const fallbackReader = toUIMessageStream({
+            stream: fallbackResult.stream,
+          }).getReader();
+          while (true) {
+            const { done, value } = await fallbackReader.read();
+            if (done) break;
+            writer.write(value);
+          }
+        } else {
+          throw err;
+        }
+      }
     },
     onFinish: async ({ responseMessage, isAborted }) => {
       if (isAborted) {

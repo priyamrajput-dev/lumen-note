@@ -29,6 +29,7 @@ import {
   Square,
   CornerDownLeft,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 
 interface ChatStudioProps {
@@ -70,6 +71,7 @@ export function ChatStudio({
   const [selectedModel, setSelectedModel] = useState<ChatModel>(defaultModel);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Smooth Streaming State
   const {
@@ -163,6 +165,7 @@ export function ChatStudio({
     const messageText = inputMessage.trim();
     if (!messageText || isStreaming) return;
 
+    setErrorMessage(null);
     setInputMessage("");
     setOptimisticUserMsg(messageText);
     startStream();
@@ -205,11 +208,18 @@ export function ChatStudio({
         onError: (err) => {
           console.error("Stream error:", err);
           stopStream();
+          setOptimisticUserMsg(null);
+          setInputMessage(messageText);
+          setErrorMessage(err.message || "An error occurred while generating a response.");
         },
       });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       stopStream();
+      setOptimisticUserMsg(null);
+      setInputMessage(messageText);
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(msg || "Failed to communicate with AI assistant.");
     }
   };
 
@@ -560,6 +570,36 @@ export function ChatStudio({
 
         {/* Command Box Chat Input */}
         <div className="border-t border-border p-3 sm:p-4 bg-surface/90 shrink-0">
+          {errorMessage && (
+            <div className="max-w-3xl mx-auto mb-2.5 p-2.5 sm:p-3 rounded-xl bg-error/10 border border-error/30 text-error flex items-start sm:items-center justify-between text-xs gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+              <div className="flex items-start sm:items-center gap-2 min-w-0">
+                <AlertCircle className="h-4 w-4 shrink-0 text-error mt-0.5 sm:mt-0" />
+                <span className="leading-snug break-words">{errorMessage}</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                {selectedModel === "gpt-4o" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedModel("gpt-4o-mini");
+                      setErrorMessage(null);
+                    }}
+                    className="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-accent text-white hover:bg-accent-hover transition-colors cursor-pointer shadow-2xs"
+                  >
+                    Use gpt-4o-mini
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setErrorMessage(null)}
+                  className="p-1 text-muted hover:text-foreground text-xs cursor-pointer rounded"
+                  title="Dismiss error"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
           <form
             onSubmit={handleSendMessage}
             className="max-w-3xl mx-auto relative rounded-2xl border border-border bg-surface-secondary/40 p-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all shadow-2xs"

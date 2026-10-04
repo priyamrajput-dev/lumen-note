@@ -406,6 +406,14 @@ export async function streamChat({
               accumulatedText += parsed;
               onChunk(parsed);
             } else if (parsed && typeof parsed === "object") {
+              if (parsed.type === "error") {
+                const errText =
+                  parsed.errorText ||
+                  parsed.message ||
+                  parsed.error ||
+                  "An error occurred while generating response.";
+                throw new Error(errText);
+              }
               if (parsed.type === "text-delta" && typeof parsed.delta === "string") {
                 accumulatedText += parsed.delta;
                 onChunk(parsed.delta);
@@ -420,7 +428,10 @@ export async function streamChat({
                 onChunk(parsed.content);
               }
             }
-          } catch {
+          } catch (e) {
+            if (e instanceof Error && e.message && !sseData.includes("SyntaxError")) {
+              throw e;
+            }
             if (sseData) {
               accumulatedText += sseData;
               onChunk(sseData);
@@ -452,6 +463,9 @@ export async function streamChat({
           // 3. Raw JSON or plain text line
           try {
             const parsed = JSON.parse(trimmed);
+            if (parsed?.type === "error") {
+              throw new Error(parsed.errorText || "An error occurred during response streaming.");
+            }
             if (parsed?.type === "text-delta" && typeof parsed.delta === "string") {
               accumulatedText += parsed.delta;
               onChunk(parsed.delta);
@@ -459,11 +473,19 @@ export async function streamChat({
               accumulatedText += parsed.delta;
               onChunk(parsed.delta);
             }
-          } catch {
-            // ignore non-text protocol lines
+          } catch (e) {
+            if (e instanceof Error && e.message && !trimmed.includes("SyntaxError")) {
+              throw e;
+            }
           }
         }
       }
+    }
+
+    if (!accumulatedText.trim() && !signal?.aborted) {
+      throw new Error(
+        "No response generated. The AI model may be unavailable or credit limits reached. Try selecting gpt-4o-mini."
+      );
     }
 
     onFinish?.(accumulatedText);
