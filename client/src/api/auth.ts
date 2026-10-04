@@ -3,8 +3,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type { AuthSessionResponse } from "@/types";
 
+const getAuthBaseUrl = (): string => {
+  if (import.meta.env.VITE_SERVER_URL) {
+    return import.meta.env.VITE_SERVER_URL.replace(/\/+$/, "");
+  }
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl && apiUrl.startsWith("http")) {
+    return apiUrl.replace(/\/api\/?$/, "");
+  }
+  return typeof window !== "undefined" ? window.location.origin : "";
+};
+
 export const authClient = createAuthClient({
-  baseURL: window.location.origin,
+  baseURL: getAuthBaseUrl(),
 });
 
 export const AUTH_QUERY_KEY = ["auth", "session"] as const;
@@ -19,12 +30,40 @@ export function exitDemoMode(): void {
     localStorage.removeItem("lumen_demo_workspaces");
     localStorage.removeItem("lumen_demo_sources");
     localStorage.removeItem("lumen_demo_memories");
+    localStorage.removeItem("lumen_auth_token");
   }
 }
 
+export function syncTokenFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      localStorage.setItem("lumen_auth_token", token);
+      params.delete("token");
+      const newSearch = params.toString() ? `?${params.toString()}` : "";
+      const cleanUrl = `${window.location.pathname}${newSearch}${window.location.hash}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+      return token;
+    }
+    return localStorage.getItem("lumen_auth_token");
+  } catch {
+    return null;
+  }
+}
+
+if (typeof window !== "undefined") {
+  syncTokenFromUrl();
+}
+
 export async function fetchSession(): Promise<AuthSessionResponse | null> {
+  syncTokenFromUrl();
   try {
     const res = await apiClient.get<AuthSessionResponse | null>("/auth/get-session");
+    if (res.data?.session?.token && typeof window !== "undefined") {
+      localStorage.setItem("lumen_auth_token", res.data.session.token);
+    }
     return res.data;
   } catch (err) {
     return null;
@@ -46,6 +85,9 @@ export function useSignOut() {
   return useMutation({
     mutationFn: async () => {
       exitDemoMode();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lumen_auth_token");
+      }
       try {
         await authClient.signOut();
       } catch (e) {
@@ -54,6 +96,9 @@ export function useSignOut() {
     },
     onSuccess: () => {
       exitDemoMode();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lumen_auth_token");
+      }
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
       queryClient.clear();
       window.location.href = "/login";
@@ -62,8 +107,10 @@ export function useSignOut() {
 }
 
 export async function signInWithGoogle() {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   await authClient.signIn.social({
     provider: "google",
-    callbackURL: "/dashboard",
+    callbackURL: `${origin}/dashboard`,
+    errorCallbackURL: `${origin}/login`,
   });
 }

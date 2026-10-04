@@ -7,7 +7,7 @@ async function startServer() {
   try {
     const server = createServer(createApplication());
 
-    server.listen(env.PORT, () => {
+    server.listen(env.PORT,"0.0.0.0",() => {
       connectDB();
       console.log(`http server is listing at PORT: ${env.PORT}`);
     });

@@ -1,9 +1,7 @@
 import { Inngest } from "inngest";
-import { env } from "../common/config/env.js";
 
 export const inngest = new Inngest({
   id: "lumen-note",
-  isDev: process.env.NODE_ENV !== "production" || !env.INNGEST_SIGNING_KEY,
 });
 
 export type SourceCreatedEvent = {

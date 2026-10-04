@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { bearer } from "better-auth/plugins";
 import { db } from "../db/index.js";
 import * as schema from "../db/schema.js";
 import { env } from "../common/config/env.js";
@@ -9,7 +10,42 @@ const clientURL = env.CLIENT_URL;
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [clientURL],
+  account: {
+    skipStateCookieCheck: true,
+  },
+  trustedOrigins: [
+    clientURL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://*.vercel.app",
+  ].filter(Boolean),
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      partitioned: true,
+    },
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: "lax",
+          secure: true,
+          partitioned: false,
+        },
+      },
+      oauth_state: {
+        attributes: {
+          sameSite: "lax",
+          secure: true,
+          partitioned: false,
+        },
+      },
+    },
+    ipAddress: {
+      ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+    },
+  },
+  plugins: [bearer()],
 
   database: drizzleAdapter(db, {
     provider: "pg",
