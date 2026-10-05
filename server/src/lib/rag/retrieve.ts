@@ -235,9 +235,15 @@ export function buildChatSystemPrompt(input: {
 
   if (input.webSearchEnabled) {
     sections.push(
-      "You have access to a web_search tool for up-to-date information outside the workspace.",
+      "Live web search is ENABLED for this request. You have access to a web_search tool for up-to-date information outside the workspace.",
       "Use it when the user asks about recent events or topics not covered by their sources.",
       "Cite web results inline using [W1], [W2], etc. matching the web result blocks.",
+    );
+  } else {
+    sections.push(
+      "Live web search is STRICTLY DISABLED for this request. You DO NOT have access to live internet or web search tools.",
+      "Do NOT attempt to search the web, never pretend or claim that you performed a web search, and do NOT cite web sources or use [W1], [W2] tags.",
+      "Rely strictly on the provided workspace context or your standard internal training data.",
     );
   }
 

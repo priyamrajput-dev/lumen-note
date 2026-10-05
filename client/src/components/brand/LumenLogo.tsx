@@ -7,11 +7,11 @@ interface LumenLogoProps {
 }
 
 const SIZES = {
-  xs: { icon: "h-5 w-5", text: "text-xs", badge: "text-[8px]" },
-  sm: { icon: "h-6 w-6", text: "text-sm", badge: "text-[9px]" },
-  md: { icon: "h-8 w-8", text: "text-base", badge: "text-[10px]" },
-  lg: { icon: "h-10 w-10", text: "text-xl", badge: "text-[11px]" },
-  xl: { icon: "h-14 w-14", text: "text-2xl sm:text-3xl", badge: "text-xs" },
+  xs: { icon: "h-5 w-5", text: "text-xs", badge: "text-[9px]" },
+  sm: { icon: "h-6 w-6", text: "text-sm", badge: "text-[10px]" },
+  md: { icon: "h-8 w-8", text: "text-base", badge: "text-[11px]" },
+  lg: { icon: "h-10 w-10", text: "text-xl", badge: "text-xs" },
+  xl: { icon: "h-14 w-14", text: "text-2xl sm:text-3xl", badge: "text-sm" },
 };
 
 export function LumenLogo({
@@ -30,45 +30,39 @@ export function LumenLogo({
             viewBox="0 0 36 36"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full drop-shadow-xs"
+            className="w-full h-full"
           >
             <defs>
-              <linearGradient id="lumen-accent-grad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="var(--accent)" />
-                <stop offset="50%" stopColor="#F97316" />
-                <stop offset="100%" stopColor="var(--accent-hover)" />
-              </linearGradient>
-              <linearGradient id="lumen-glow-grad" x1="18" y1="2" x2="18" y2="34" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+              <linearGradient id="lumen-brand-grad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop offset="20.74%" stopColor="var(--category-chat)" />
+                <stop offset="65.5%" stopColor="var(--category-link)" />
               </linearGradient>
             </defs>
 
-            {/* Ambient aura ring */}
-            <circle cx="18" cy="18" r="16" stroke="url(#lumen-glow-grad)" strokeWidth="1.5" opacity="0.6" />
+            {/* Ambient hairline ring */}
+            <circle cx="18" cy="18" r="16" stroke="var(--border)" strokeWidth="1" />
             
             {/* Outer Geometric Knowledge Diamond */}
             <rect
               x="18"
-              y="4.5"
-              width="19"
-              height="19"
+              y="5"
+              width="18.5"
+              height="18.5"
               rx="4"
-              transform="rotate(45 18 4.5)"
-              fill="url(#lumen-accent-grad)"
+              transform="rotate(45 18 5)"
+              fill="url(#lumen-brand-grad)"
               opacity="0.95"
             />
 
             {/* Radiant Inner Star Prism */}
             <path
               d="M18 7C18 13.075 13.075 18 7 18C13.075 18 18 22.925 18 29C18 22.925 22.925 18 29 18C22.925 18 18 13.075 18 7Z"
-              fill="#FFFFFF"
+              fill="var(--background)"
               opacity="0.9"
             />
 
             {/* Core Luminary Focus Dot */}
-            <circle cx="18" cy="18" r="2" fill="var(--accent-hover)" />
-            <circle cx="18" cy="18" r="0.8" fill="#FFFFFF" />
+            <circle cx="18" cy="18" r="2.5" fill="var(--foreground)" />
           </svg>
         </div>
       )}
@@ -76,10 +70,10 @@ export function LumenLogo({
       {/* Typography Wordmark */}
       {variant !== "icon" && (
         <div className="flex items-center gap-2">
-          <span className={`font-bold tracking-tight text-foreground font-sans ${config.text}`}>
-            Lumen<span className="text-accent font-extrabold">Note</span>
+          <span className={`font-semibold tracking-[-0.02em] text-foreground font-sans ${config.text}`}>
+            Lumen<span className="text-category-chat font-semibold">Note</span>
           </span>
-          <span className={`hidden sm:inline-flex items-center rounded-md px-1.5 py-0.5 font-mono font-medium uppercase tracking-wider text-muted bg-surface-secondary border border-border ${config.badge}`}>
+          <span className={`hidden sm:inline-flex items-center rounded-[var(--radius-base)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground bg-card border border-border ${config.badge}`}>
             Research AI
           </span>
         </div>
@@ -87,3 +81,5 @@ export function LumenLogo({
     </div>
   );
 }
+
+export default LumenLogo;

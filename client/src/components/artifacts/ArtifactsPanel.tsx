@@ -1,9 +1,17 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import { useArtifacts, useDeleteArtifact } from "@/api/artifacts";
 import type { LearningArtifact, ArtifactType, ArtifactStatus } from "@/types";
-import { GenerateArtifactModal } from "./GenerateArtifactModal";
-import { ArtifactDetailModal } from "./ArtifactDetailModal";
+const GenerateArtifactModal = React.lazy(() =>
+  import("./GenerateArtifactModal").then((m) => ({ default: m.GenerateArtifactModal }))
+);
+const ArtifactDetailModal = React.lazy(() =>
+  import("./ArtifactDetailModal").then((m) => ({ default: m.ArtifactDetailModal }))
+);
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
+import { fadeUpVariants, staggerContainerVariants } from "@/lib/motion";
 import {
   Plus,
   Sparkles,
@@ -18,6 +26,7 @@ import {
   CheckCircle2,
   Eye,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ArtifactsPanelProps {
   workspaceId: string;
@@ -56,59 +65,41 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
   const getArtifactIcon = (type: ArtifactType) => {
     switch (type) {
       case "FLASHCARDS":
-        return <Sparkles className="h-3.5 w-3.5 text-accent" />;
+        return <Sparkles className="h-3.5 w-3.5 text-category-artifacts" />;
       case "QUIZ":
-        return <HelpCircle className="h-3.5 w-3.5 text-success" />;
+        return <HelpCircle className="h-3.5 w-3.5 text-category-memories" />;
       case "MINDMAP":
-        return <Network className="h-3.5 w-3.5 text-info" />;
+        return <Network className="h-3.5 w-3.5 text-category-sources" />;
       case "TAKEAWAYS":
-        return <ListChecks className="h-3.5 w-3.5 text-foreground-secondary" />;
+        return <ListChecks className="h-3.5 w-3.5 text-category-workspaces" />;
       case "SUMMARY":
-        return <BookOpen className="h-3.5 w-3.5 text-accent" />;
       case "REPORT":
       default:
-        return <FileText className="h-3.5 w-3.5 text-foreground-secondary" />;
+        return <BookOpen className="h-3.5 w-3.5 text-category-workspaces" />;
     }
   };
 
-  const getStatusBadge = (status: ArtifactStatus) => {
-    switch (status) {
-      case "READY":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-success-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-success border border-success/20">
-            <CheckCircle2 className="h-2.5 w-2.5" />
-            Ready
-          </span>
-        );
-      case "PROCESSING":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-primary-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-primary border border-primary/25">
-            <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            Synthesizing
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-error-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-error border border-error/20">
-            <AlertCircle className="h-2.5 w-2.5" />
-            Failed
-          </span>
-        );
-      case "PENDING":
+  const getArtifactTypeColor = (type: ArtifactType) => {
+    switch (type) {
+      case "MINDMAP":
+        return "text-category-sources";
+      case "FLASHCARDS":
+        return "text-category-artifacts";
+      case "SUMMARY":
+      case "REPORT":
+      case "TAKEAWAYS":
+        return "text-category-workspaces";
+      case "QUIZ":
+        return "text-category-memories";
       default:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-warning-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-warning border border-warning/20">
-            <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            Queued
-          </span>
-        );
+        return "text-muted-foreground";
     }
   };
 
   return (
     <div className="flex h-full flex-col bg-surface/40 text-foreground overflow-hidden">
       {/* Top Header */}
-      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-3.5 py-2.5 bg-surface/90 shrink-0 shadow-2xs">
+      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-3.5 py-2.5 bg-surface/90 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
             Notes &amp; Artifacts
@@ -118,14 +109,16 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
           </span>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="sm"
           onClick={() => setIsGenerateOpen(true)}
-          className="inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer subtle-focus"
+          className="h-7 px-2.5 text-xs gap-1"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Generate</span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter Tabs */}
@@ -136,7 +129,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
             onClick={() => setFilterType("ALL")}
             className={`flex-1 rounded-md py-1 text-center transition-colors cursor-pointer subtle-focus ${
               filterType === "ALL"
-                ? "bg-surface text-foreground font-semibold shadow-2xs"
+                ? "bg-surface text-foreground font-semibold"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -147,7 +140,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
             onClick={() => setFilterType("STUDY")}
             className={`flex-1 rounded-md py-1 text-center transition-colors cursor-pointer subtle-focus ${
               filterType === "STUDY"
-                ? "bg-surface text-foreground font-semibold shadow-2xs"
+                ? "bg-surface text-foreground font-semibold"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -158,7 +151,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
             onClick={() => setFilterType("DOCS")}
             className={`flex-1 rounded-md py-1 text-center transition-colors cursor-pointer subtle-focus ${
               filterType === "DOCS"
-                ? "bg-surface text-foreground font-semibold shadow-2xs"
+                ? "bg-surface text-foreground font-semibold"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -168,7 +161,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
       </div>
 
       {/* Artifacts List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scroll-fade-edges">
         {isLoading && (
           <div className="space-y-2 p-1">
             {[1, 2, 3].map((n) => (
@@ -188,7 +181,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
 
         {!isLoading && !isError && artifacts?.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/40 py-10 px-4 text-center my-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border text-accent mb-2.5 shadow-2xs">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border text-category-artifacts mb-2.5">
               <Sparkles className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-foreground">No artifacts generated</h4>
@@ -198,7 +191,7 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
             <button
               type="button"
               onClick={() => setIsGenerateOpen(true)}
-              className="mt-3 inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer subtle-focus"
+              className="mt-3 inline-flex items-center gap-1 h-7 rounded-[100px] gradient-border bg-card hover:bg-secondary px-3 text-xs font-semibold text-foreground hover:text-category-artifacts transition-colors cursor-pointer subtle-focus"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Generate First Artifact</span>
@@ -207,84 +200,104 @@ export function ArtifactsPanel({ workspaceId, isCompact = false }: ArtifactsPane
         )}
 
         {!isLoading && !isError && filteredArtifacts && filteredArtifacts.length > 0 && (
-          <div className="space-y-1.5">
+          <motion.div
+            variants={staggerContainerVariants}
+            initial="hidden"
+            animate="visible"
+            layout
+            className="space-y-1.5"
+          >
             {filteredArtifacts.map((art) => (
-              <div
+              <motion.div
                 key={art.id}
+                layout
+                variants={fadeUpVariants}
                 onClick={() => {
                   if (art.status === "READY") {
                     setSelectedArtifact(art);
                   }
                 }}
-                className={`@container group relative flex flex-col justify-between rounded-lg border p-3 transition-all text-xs ${
+                className={`@container group relative flex flex-col justify-between rounded-lg border p-3 transition-all text-xs gradient-border-hover panel-card ${
+                  art.status === "PROCESSING" ? "gradient-border-active " : ""
+                }${
                   art.status === "READY"
-                    ? "cursor-pointer border-border/80 bg-surface hover:border-accent/50 hover:shadow-2xs"
-                    : "border-border/60 bg-surface-secondary/30 opacity-80"
+                    ? "cursor-pointer border-border bg-card hover:bg-muted/30"
+                    : "border-border/60 bg-muted/20 opacity-80"
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-1.5">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-secondary border border-border/70">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary border border-border">
                         {getArtifactIcon(art.type)}
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] font-mono text-accent font-bold uppercase tracking-wider block">
+                        <span className={cn("text-[9px] font-mono font-bold uppercase tracking-wider block", getArtifactTypeColor(art.type))}>
                           {art.type}
                         </span>
-                        <h4 className="text-xs font-bold text-foreground group-hover:text-accent line-clamp-1 transition-colors">
+                        <h4 className="text-xs font-bold text-foreground line-clamp-1 transition-colors">
                           {art.title}
                         </h4>
                       </div>
                     </div>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         setArtifactToDelete({ id: art.id, title: art.title });
                       }}
-                      className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center h-6 w-6 rounded text-muted hover:text-error hover:bg-error/10 transition-all cursor-pointer subtle-focus"
+                      className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 text-muted-foreground hover:text-destructive"
                       title="Delete artifact"
                       aria-label={`Delete artifact ${art.title}`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
                 <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[10px]">
-                  {getStatusBadge(art.status)}
+                  <StatusBadge status={art.status} />
 
                   {art.status === "READY" ? (
-                    <span className="flex items-center gap-1 font-semibold text-accent group-hover:underline">
+                    <span className={cn("flex items-center gap-1 font-semibold group-hover:underline", getArtifactTypeColor(art.type))}>
                       <Eye className="h-3 w-3" />
                       Open Tool
                     </span>
                   ) : (
-                    <span className="font-mono text-muted">
+                    <span className="font-mono text-muted-foreground">
                       Inngest Pipeline
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* Generate Artifact Modal */}
-      <GenerateArtifactModal
-        workspaceId={workspaceId}
-        isOpen={isGenerateOpen}
-        onClose={() => setIsGenerateOpen(false)}
-      />
+      {isGenerateOpen && (
+        <React.Suspense fallback={null}>
+          <GenerateArtifactModal
+            workspaceId={workspaceId}
+            isOpen={isGenerateOpen}
+            onClose={() => setIsGenerateOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Interactive Detail Viewer Modal */}
-      <ArtifactDetailModal
-        artifact={selectedArtifact}
-        onClose={() => setSelectedArtifact(null)}
-      />
+      {selectedArtifact && (
+        <React.Suspense fallback={null}>
+          <ArtifactDetailModal
+            artifact={selectedArtifact}
+            onClose={() => setSelectedArtifact(null)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Delete Artifact Confirmation Dialog */}
       <ConfirmDialog

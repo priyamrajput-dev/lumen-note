@@ -9,11 +9,10 @@ export function ProtectedRoute() {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-accent-subtle border border-accent/30">
-            <Loader2 className="h-5 w-5 animate-spin text-accent" />
-            <div className="absolute inset-0 rounded-xl blur-md bg-accent/20 -z-10" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-base)] bg-card border border-border shadow-none">
+            <Loader2 className="h-5 w-5 animate-spin text-category-chat" />
           </div>
-          <p className="text-xs text-muted tracking-wide font-mono">Authenticating session...</p>
+          <p className="text-xs text-muted-foreground tracking-wide font-mono">Authenticating session...</p>
         </div>
       </div>
     );

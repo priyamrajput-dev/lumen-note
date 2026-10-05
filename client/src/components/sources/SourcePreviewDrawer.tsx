@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Source } from "@/types";
 import { useDeleteSource } from "@/api/sources";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   X,
   FileText,
@@ -128,13 +129,13 @@ export function SourcePreviewDrawer({
   const getSourceIcon = (type?: string) => {
     switch (type?.toUpperCase()) {
       case "PDF":
-        return <FileText className="h-4 w-4 text-rose-500" />;
+        return <FileText className="h-4 w-4 text-category-memories" />;
       case "WEBSITE":
-        return <Globe className="h-4 w-4 text-blue-500" />;
+        return <Globe className="h-4 w-4 text-category-sources" />;
       case "YOUTUBE":
-        return <Video className="h-4 w-4 text-red-500" />;
+        return <Video className="h-4 w-4 text-category-artifacts" />;
       default:
-        return <FileCode className="h-4 w-4 text-accent" />;
+        return <FileCode className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -162,19 +163,19 @@ export function SourcePreviewDrawer({
 
   const contentElement = (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex justify-end bg-overlay backdrop-blur-xs animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="relative flex h-full w-full max-w-2xl sm:max-w-3xl flex-col border-l border-border bg-surface shadow-2xl animate-in slide-in-from-right duration-200"
+        className="relative flex h-full w-full max-w-2xl sm:max-w-3xl flex-col border-l border-border bg-surface animate-in slide-in-from-right duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Editorial Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-3 bg-surface-secondary/50 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border shrink-0 shadow-2xs">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-border shrink-0">
               {getSourceIcon(source?.type)}
             </div>
             <div className="min-w-0">
@@ -182,12 +183,7 @@ export function SourcePreviewDrawer({
                 <span className="text-[10px] font-mono font-bold uppercase rounded bg-surface px-1.5 py-0.5 text-foreground border border-border">
                   {source?.type || "SOURCE"}
                 </span>
-                {source && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-mono text-success font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                    {source.status.toLowerCase()}
-                  </span>
-                )}
+                {source && <StatusBadge status={source.status} />}
               </div>
             </div>
           </div>
@@ -266,7 +262,7 @@ export function SourcePreviewDrawer({
               className="w-full rounded-lg border border-border bg-surface-secondary/40 pl-8 pr-12 py-1 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent font-sans disabled:opacity-50"
             />
             {searchQuery && (
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-accent font-semibold">
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-category-sources font-semibold">
                 {searchMatchesCount} found
               </span>
             )}
@@ -280,7 +276,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontStyle("sans")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
-                  fontStyle === "sans" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontStyle === "sans" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
               >
                 Sans
@@ -289,7 +285,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontStyle("serif")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer font-serif ${
-                  fontStyle === "serif" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontStyle === "serif" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
               >
                 Serif
@@ -298,7 +294,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontStyle("mono")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
-                  fontStyle === "mono" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontStyle === "mono" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
               >
                 Mono
@@ -311,7 +307,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontSize("sm")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
-                  fontSize === "sm" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontSize === "sm" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
                 title="Small text"
               >
@@ -321,7 +317,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontSize("md")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
-                  fontSize === "md" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontSize === "md" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
                 title="Medium text"
               >
@@ -331,7 +327,7 @@ export function SourcePreviewDrawer({
                 type="button"
                 onClick={() => setFontSize("lg")}
                 className={`rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
-                  fontSize === "lg" ? "bg-surface text-foreground font-bold shadow-2xs" : "text-muted hover:text-foreground"
+                  fontSize === "lg" ? "bg-surface text-foreground font-bold" : "text-muted hover:text-foreground"
                 }`}
                 title="Large text"
               >
@@ -345,7 +341,7 @@ export function SourcePreviewDrawer({
         <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-6 space-y-6">
           {isLoading || !source ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
-              <Loader2 className="h-8 w-8 animate-spin text-accent" />
+              <Loader2 className="h-8 w-8 animate-spin text-category-sources" />
               <p className="text-xs font-mono text-muted">Opening document reader...</p>
             </div>
           ) : (
@@ -361,7 +357,7 @@ export function SourcePreviewDrawer({
                     href={source.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline font-mono"
+                    className="mt-2 inline-flex items-center gap-1 text-xs text-category-sources hover:underline font-mono"
                   >
                     <span>{source.url}</span>
                     <ExternalLink className="h-3 w-3" />
@@ -371,11 +367,11 @@ export function SourcePreviewDrawer({
                 {/* Reader Stats Bar */}
                 <div className="mt-3.5 flex flex-wrap items-center gap-3 text-xs font-mono text-muted">
                   <span className="flex items-center gap-1 bg-surface-secondary/60 rounded-md px-2 py-0.5 border border-border/50">
-                    <Clock className="h-3 w-3 text-accent" />
+                    <Clock className="h-3 w-3 text-category-sources" />
                     {stats.readTimeMinutes} min read
                   </span>
                   <span className="flex items-center gap-1 bg-surface-secondary/60 rounded-md px-2 py-0.5 border border-border/50">
-                    <Layers className="h-3 w-3 text-accent" />
+                    <Layers className="h-3 w-3 text-category-sources" />
                     {stats.words.toLocaleString()} words ({stats.chars.toLocaleString()} chars)
                   </span>
                   <span className="flex items-center gap-1 bg-surface-secondary/60 rounded-md px-2 py-0.5 border border-border/50">
@@ -403,7 +399,7 @@ export function SourcePreviewDrawer({
                             <p key={idx} className="bg-accent/10 -mx-2 px-2 py-0.5 rounded border-l-2 border-accent">
                               {parts.map((part, pIdx) =>
                                 part.toLowerCase() === searchQuery.toLowerCase() ? (
-                                  <mark key={pIdx} className="bg-accent text-white font-semibold rounded px-1 py-0.2">
+                                  <mark key={pIdx} className="bg-category-sources/25 text-category-sources font-semibold rounded px-1 py-0.2">
                                     {part}
                                   </mark>
                                 ) : (
@@ -416,7 +412,7 @@ export function SourcePreviewDrawer({
 
                         if (isHeading) {
                           return (
-                            <h3 key={idx} className="text-base sm:text-lg font-bold text-foreground pt-2 text-accent">
+                            <h3 key={idx} className="text-base sm:text-lg font-bold text-foreground pt-2">
                               {line.replace(/^#+\s*/, "")}
                             </h3>
                           );
@@ -425,7 +421,7 @@ export function SourcePreviewDrawer({
                         if (isBullet) {
                           return (
                             <div key={idx} className="flex items-start gap-2 pl-2">
-                              <span className="text-accent font-bold mt-0.5">•</span>
+                              <span className="text-category-sources font-bold mt-0.5">•</span>
                               <span>{line.replace(/^[\s•-]+/, "")}</span>
                             </div>
                           );

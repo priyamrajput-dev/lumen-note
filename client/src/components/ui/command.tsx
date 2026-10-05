@@ -21,7 +21,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "flex size-full flex-col overflow-hidden bg-surface text-foreground font-sans",
+        "flex size-full flex-col overflow-hidden bg-background text-foreground font-sans",
         className
       )}
       {...props}
@@ -51,7 +51,7 @@ function CommandDialog({
       </DialogHeader>
       <DialogContent
         className={cn(
-          "top-1/4 translate-y-0 overflow-hidden rounded-2xl border border-border bg-surface p-0 shadow-2xl max-w-lg",
+          "top-1/4 translate-y-0 overflow-hidden rounded-[var(--radius-md)] border border-border bg-background p-0 max-w-lg",
           className
         )}
         showCloseButton={showCloseButton}
@@ -71,7 +71,7 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex items-center gap-2.5 border-b border-border px-3.5 py-3"
+      className="flex items-center gap-2.5 border-b border-border/70 px-3.5 py-3"
     >
       <Search className="h-4 w-4 shrink-0 text-muted" />
       <CommandPrimitive.Input
@@ -153,7 +153,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground-secondary outline-none transition-colors data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground hover:bg-surface-secondary hover:text-foreground [&_svg]:shrink-0",
+        "relative flex cursor-pointer select-none items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-xs font-medium text-foreground-secondary outline-none transition-colors data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-accent/50 data-[selected=true]:text-foreground hover:bg-accent/50 hover:text-foreground [&_svg]:shrink-0",
         className
       )}
       {...props}
@@ -171,7 +171,7 @@ function CommandShortcut({
     <span
       data-slot="command-shortcut"
       className={cn(
-        "ml-auto text-[10px] font-mono tracking-wider text-muted bg-surface-secondary/80 px-1.5 py-0.5 rounded border border-border/70",
+        "ml-auto text-[10px] font-mono tracking-wider text-muted bg-surface px-1.5 py-0.5 rounded border border-border/70",
         className
       )}
       {...props}

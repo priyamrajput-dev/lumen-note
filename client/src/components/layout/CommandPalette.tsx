@@ -55,7 +55,7 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
       onOpenChange={setOpen}
       title="Quick Navigation & Research Commands"
       description="Search workspaces, jump to research modules, or toggle workspace settings."
-      className="max-w-lg border border-border bg-surface shadow-2xl rounded-2xl"
+      className="max-w-lg border border-border bg-card shadow-none rounded-[var(--radius-base)]"
     >
       <CommandInput placeholder="Type a command or search workspaces..." />
       <CommandList className="max-h-80 py-2">
@@ -68,13 +68,13 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
                 key={ws.id}
                 value={`${ws.title} ${ws.description || ""}`}
                 onSelect={() => runCommand(() => navigate(`/workspace/${ws.id}`))}
-                className="flex items-center gap-2.5 py-2 cursor-pointer"
+                className="flex items-center gap-2.5 py-2 cursor-pointer rounded-[var(--radius-base)] text-foreground hover:bg-secondary aria-selected:bg-secondary"
               >
                 <span className="text-base">{ws.icon || "🧠"}</span>
                 <span className="font-medium text-foreground truncate flex-1">
                   {ws.title}
                 </span>
-                <span className="text-[10px] font-mono text-muted bg-surface-secondary px-1.5 py-0.5 rounded border border-border">
+                <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border">
                   {ws.defaultModel}
                 </span>
               </CommandItem>
@@ -84,14 +84,14 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
 
         {session?.user && (
           <>
-            <CommandSeparator className="my-1" />
+            <CommandSeparator className="my-1 border-border" />
             <CommandGroup heading="Quick Jump">
               <CommandItem
                 value="Workspaces Library Dashboard"
                 onSelect={() => runCommand(() => navigate("/dashboard"))}
-                className="flex items-center gap-2 py-2 cursor-pointer"
+                className="flex items-center gap-2 py-2 cursor-pointer rounded-[var(--radius-base)] text-foreground hover:bg-secondary aria-selected:bg-secondary"
               >
-                <FolderOpen className="h-4 w-4 text-accent" />
+                <FolderOpen className="h-4 w-4 text-category-workspaces" />
                 <span>Workspaces Library</span>
                 <CommandShortcut>G W</CommandShortcut>
               </CommandItem>
@@ -99,9 +99,9 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
               <CommandItem
                 value="Personal Knowledge & Memories"
                 onSelect={() => runCommand(() => navigate("/memories"))}
-                className="flex items-center gap-2 py-2 cursor-pointer"
+                className="flex items-center gap-2 py-2 cursor-pointer rounded-[var(--radius-base)] text-foreground hover:bg-secondary aria-selected:bg-secondary"
               >
-                <BrainCircuit className="h-4 w-4 text-accent" />
+                <BrainCircuit className="h-4 w-4 text-category-memories" />
                 <span>Personal Knowledge & Memories</span>
                 <CommandShortcut>G M</CommandShortcut>
               </CommandItem>
@@ -114,9 +114,9 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
             <CommandItem
               value="Sign In with Google"
               onSelect={() => runCommand(() => navigate("/login"))}
-              className="flex items-center gap-2 py-2 cursor-pointer"
+              className="flex items-center gap-2 py-2 cursor-pointer rounded-[var(--radius-base)] text-foreground hover:bg-secondary aria-selected:bg-secondary"
             >
-              <Plus className="h-4 w-4 text-accent" />
+              <Plus className="h-4 w-4 text-category-chat" />
               <span>Sign In with Google</span>
             </CommandItem>
           </CommandGroup>

@@ -7,6 +7,7 @@ import {
   Trophy,
   ArrowRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface QuizViewProps {
   questions: QuizQuestion[];
@@ -63,39 +64,40 @@ export function QuizView({ questions }: QuizViewProps) {
     const percentage = Math.round((score / questions.length) * 100);
     return (
       <div className="flex flex-col items-center justify-center p-8 max-w-md mx-auto text-center animate-in zoom-in-95 duration-200">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-subtle text-accent mb-3">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-category-memories border border-border mb-3">
           <Trophy className="h-7 w-7" />
         </div>
         <h3 className="text-lg font-bold text-foreground">Quiz Completed!</h3>
         <p className="mt-1 text-xs sm:text-sm text-foreground-secondary">
-          You scored <span className="font-semibold text-accent">{score}</span> out of{" "}
+          You scored <span className="font-semibold text-category-memories">{score}</span> out of{" "}
           <span className="font-semibold text-foreground">{questions.length}</span> ({percentage}%)
         </p>
 
-        <div className="mt-5 w-full rounded-xl bg-surface border border-border p-4 text-xs space-y-2 text-left shadow-2xs">
+        <div className="mt-5 w-full rounded-[var(--radius-base)] bg-card border border-border p-4 text-xs space-y-2 text-left">
           {percentage >= 80 ? (
-            <p className="text-success font-medium">
+            <p className="text-status-ready font-medium">
               Excellent mastery of the source material!
             </p>
           ) : percentage >= 50 ? (
-            <p className="text-warning font-medium">
+            <p className="text-status-processing font-medium">
               Good comprehension. Review highlighted sources to solidify understanding.
             </p>
           ) : (
-            <p className="text-error font-medium">
+            <p className="text-status-failed font-medium">
               Review your flashcards or summaries and try again.
             </p>
           )}
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="default"
           onClick={handleRestart}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors cursor-pointer"
+          className="mt-6"
         >
           <RotateCcw className="h-4 w-4" />
           <span>Retake Quiz</span>
-        </button>
+        </Button>
       </div>
     );
   }
@@ -103,17 +105,25 @@ export function QuizView({ questions }: QuizViewProps) {
   return (
     <div className="max-w-xl mx-auto p-4 sm:p-6">
       {/* Progress */}
-      <div className="flex items-center justify-between text-xs font-mono text-muted mb-4">
-        <span className="text-accent font-semibold">
+      <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mb-4">
+        <span className="text-category-memories font-semibold">
           Question {currentIndex + 1} of {questions.length}
         </span>
-        <span className="text-muted">
+        <span className="text-muted-foreground">
           Score: {score}/{currentIndex + (hasAnswered ? 1 : 0)}
         </span>
       </div>
 
       {/* Question Card */}
-      <div className="rounded-2xl border border-border bg-surface p-6 shadow-md">
+      <div className="rounded-[var(--radius-base)] border border-border bg-card p-6">
+        {/* Transform ScaleX Progress Bar */}
+        <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden mb-6">
+          <div
+            className="h-full bg-category-memories transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] origin-left"
+            style={{ transform: `scaleX(${(currentIndex + 1) / questions.length})` }}
+          />
+        </div>
+
         <h3 className="text-sm sm:text-base font-bold text-foreground leading-relaxed mb-6">
           {currentQ.question}
         </h3>
@@ -124,14 +134,14 @@ export function QuizView({ questions }: QuizViewProps) {
             const isSelected = selectedOption === idx;
             const isCorrect = idx === currentQ.correctIndex;
 
-            let btnStyle = "border-border bg-surface-secondary/40 hover:border-border/80 text-foreground";
+            let btnStyle = "border-border bg-secondary/40 hover:bg-secondary text-foreground";
             if (hasAnswered) {
               if (isCorrect) {
-                btnStyle = "border-success/60 bg-success/15 text-success font-semibold";
+                btnStyle = "border-status-ready/60 bg-status-ready-bg text-status-ready font-semibold flash-success";
               } else if (isSelected) {
-                btnStyle = "border-error/60 bg-error/15 text-error font-semibold";
+                btnStyle = "border-status-failed/60 bg-status-failed-bg text-status-failed font-semibold animate-shake";
               } else {
-                btnStyle = "opacity-50 border-border bg-surface text-muted";
+                btnStyle = "opacity-50 border-border bg-card text-muted-foreground";
               }
             }
 
@@ -151,10 +161,10 @@ export function QuizView({ questions }: QuizViewProps) {
                 </div>
 
                 {hasAnswered && isCorrect && (
-                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 ml-2" />
+                  <CheckCircle2 className="h-4 w-4 text-status-ready shrink-0 ml-2 animate-in zoom-in-75 duration-200" />
                 )}
                 {hasAnswered && isSelected && !isCorrect && (
-                  <XCircle className="h-4 w-4 text-error shrink-0 ml-2" />
+                  <XCircle className="h-4 w-4 text-status-failed shrink-0 ml-2 animate-in zoom-in-75 duration-200" />
                 )}
               </button>
             );
@@ -163,8 +173,8 @@ export function QuizView({ questions }: QuizViewProps) {
 
         {/* Explanation Box */}
         {hasAnswered && (
-          <div className="mt-4 rounded-xl border border-border bg-surface-secondary/50 p-3.5 text-xs text-foreground leading-relaxed animate-in fade-in duration-150">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent block mb-1">
+          <div className="mt-4 rounded-xl border border-border bg-secondary/50 p-3.5 text-xs text-foreground leading-relaxed animate-in fade-in duration-150">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-category-memories block mb-1">
               Explanation
             </span>
             {currentQ.explanation}
@@ -174,16 +184,16 @@ export function QuizView({ questions }: QuizViewProps) {
         {/* Next Button */}
         {hasAnswered && (
           <div className="mt-5 flex justify-end">
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover transition-colors shadow-2xs cursor-pointer"
             >
               <span>
                 {currentIndex < questions.length - 1 ? "Next Question" : "See Final Score"}
               </span>
               <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
         )}
       </div>

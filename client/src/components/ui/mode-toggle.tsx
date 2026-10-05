@@ -13,9 +13,9 @@ export function ModeToggle() {
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
       {theme === "dark" ? (
-        <Sun className="h-4 w-4 text-accent transition-transform hover:rotate-45" />
+        <Sun className="h-4 w-4 text-category-artifacts transition-transform hover:rotate-45" />
       ) : (
-        <Moon className="h-4 w-4 text-accent transition-transform hover:-rotate-12" />
+        <Moon className="h-4 w-4 text-category-sources transition-transform hover:-rotate-12" />
       )}
     </button>
   );

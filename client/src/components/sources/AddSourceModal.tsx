@@ -17,6 +17,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AddSourceModalProps {
   workspaceId: string;
@@ -146,8 +147,8 @@ export function AddSourceModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="relative w-full max-w-lg rounded-[var(--radius-base)] border border-border bg-surface p-6 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-border">
           <div>
@@ -156,13 +157,16 @@ export function AddSourceModal({
               Ingest content into your research notebook for grounded AI and study tools.
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Close dialog"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Tab Navigation */}
@@ -175,8 +179,8 @@ export function AddSourceModal({
             }}
             className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "pdf"
-                ? "bg-surface text-accent shadow-2xs border border-border"
-                : "text-muted hover:text-foreground"
+                ? "bg-card text-category-memories border border-border"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <FileUp className="h-3.5 w-3.5" />
@@ -191,8 +195,8 @@ export function AddSourceModal({
             }}
             className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "website"
-                ? "bg-surface text-accent shadow-2xs border border-border"
-                : "text-muted hover:text-foreground"
+                ? "bg-card text-category-sources border border-border"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Globe className="h-3.5 w-3.5" />
@@ -207,8 +211,8 @@ export function AddSourceModal({
             }}
             className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "youtube"
-                ? "bg-surface text-accent shadow-2xs border border-border"
-                : "text-muted hover:text-foreground"
+                ? "bg-card text-category-artifacts border border-border"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Video className="h-3.5 w-3.5" />
@@ -223,8 +227,8 @@ export function AddSourceModal({
             }}
             className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "note"
-                ? "bg-surface text-accent shadow-2xs border border-border"
-                : "text-muted hover:text-foreground"
+                ? "bg-card text-foreground border border-border"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <FileCode className="h-3.5 w-3.5" />
@@ -269,17 +273,17 @@ export function AddSourceModal({
                     <span className="text-[11px] font-mono text-muted">
                       {(pdfFile.size / (1024 * 1024)).toFixed(2)} MB
                     </span>
-                    <span className="text-[11px] text-accent underline">Choose different PDF</span>
+                    <span className="text-[11px] text-category-memories underline">Choose different PDF</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-subtle text-accent">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-category-memories border border-border">
                       <FileUp className="h-5 w-5" />
                     </div>
                     <span className="text-xs font-semibold text-foreground">
                       Drop research paper or PDF here
                     </span>
-                    <span className="text-[11px] text-muted">Up to 10MB per document</span>
+                    <span className="text-[11px] text-muted-foreground">Up to 10MB per document</span>
                   </div>
                 )}
               </label>
@@ -300,21 +304,25 @@ export function AddSourceModal({
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-border">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                disabled={isPending}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                variant="primary"
+                size="sm"
+                loading={isPending}
+                loadingText="Adding…"
                 disabled={!pdfFile || isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>Upload & Index PDF</span>
-              </button>
+                Upload & Index PDF
+              </Button>
             </div>
           </form>
         )}
@@ -324,7 +332,7 @@ export function AddSourceModal({
           <form onSubmit={handleWebSubmit} className="mt-4 space-y-4">
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                Website URL <span className="text-accent">*</span>
+                Website URL <span className="text-destructive">*</span>
               </label>
               <input
                 type="url"
@@ -351,21 +359,25 @@ export function AddSourceModal({
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-border">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                disabled={isPending}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                variant="primary"
+                size="sm"
+                loading={isPending}
+                loadingText="Adding…"
                 disabled={!webUrl.trim() || isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>Scrape & Index Website</span>
-              </button>
+                Scrape & Index Website
+              </Button>
             </div>
           </form>
         )}
@@ -375,7 +387,7 @@ export function AddSourceModal({
           <form onSubmit={handleYtSubmit} className="mt-4 space-y-4">
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                YouTube Video URL <span className="text-accent">*</span>
+                YouTube Video URL <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
@@ -402,21 +414,25 @@ export function AddSourceModal({
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-border">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                disabled={isPending}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                variant="primary"
+                size="sm"
+                loading={isPending}
+                loadingText="Adding…"
                 disabled={!ytUrl.trim() || isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>Import Transcript</span>
-              </button>
+                Import Transcript
+              </Button>
             </div>
           </form>
         )}
@@ -426,7 +442,7 @@ export function AddSourceModal({
           <form onSubmit={handleNoteSubmit} className="mt-4 space-y-4">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-foreground">
-                Title <span className="text-accent">*</span>
+                Title <span className="text-destructive">*</span>
               </label>
               <div className="flex items-center gap-1.5">
                 <button
@@ -434,8 +450,8 @@ export function AddSourceModal({
                   onClick={() => setNoteType("MARKDOWN")}
                   className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium transition-colors cursor-pointer ${
                     noteType === "MARKDOWN"
-                      ? "bg-accent-subtle text-accent border border-accent/30"
-                      : "text-muted hover:text-foreground"
+                      ? "bg-secondary text-foreground border border-border"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Markdown
@@ -445,8 +461,8 @@ export function AddSourceModal({
                   onClick={() => setNoteType("TEXT")}
                   className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium transition-colors cursor-pointer ${
                     noteType === "TEXT"
-                      ? "bg-accent-subtle text-accent border border-accent/30"
-                      : "text-muted hover:text-foreground"
+                      ? "bg-secondary text-foreground border border-border"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Plain Text
@@ -466,7 +482,7 @@ export function AddSourceModal({
 
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                Content <span className="text-accent">*</span>
+                Content <span className="text-destructive">*</span>
               </label>
               <textarea
                 rows={6}
@@ -479,21 +495,25 @@ export function AddSourceModal({
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-border">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={onClose}
-                className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+                disabled={isPending}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                variant="primary"
+                size="sm"
+                loading={isPending}
+                loadingText="Adding…"
                 disabled={!noteTitle.trim() || !noteContent.trim() || isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>Save Note</span>
-              </button>
+                Save Note
+              </Button>
             </div>
           </form>
         )}

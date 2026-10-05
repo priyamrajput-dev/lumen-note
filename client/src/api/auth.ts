@@ -108,9 +108,41 @@ export function useSignOut() {
 
 export async function signInWithGoogle() {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  await authClient.signIn.social({
-    provider: "google",
-    callbackURL: `${origin}/dashboard`,
-    errorCallbackURL: `${origin}/login`,
-  });
+  try {
+    const res = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: `${origin}/dashboard`,
+      errorCallbackURL: `${origin}/login`,
+    });
+    if (res?.data?.url && typeof window !== "undefined") {
+      window.location.href = res.data.url;
+      return;
+    }
+  } catch (err) {
+    console.warn("authClient.signIn.social error, falling back to direct endpoint:", err);
+  }
+
+  // Direct endpoint fallback if authClient didn't redirect or return URL
+  if (typeof window !== "undefined") {
+    try {
+      const response = await fetch("/api/auth/sign-in/social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL: `${origin}/dashboard`,
+          errorCallbackURL: `${origin}/login`,
+        }),
+      });
+      const data = await response.json();
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch (fetchErr) {
+      console.error("Direct social sign in error:", fetchErr);
+      throw fetchErr;
+    }
+  }
 }

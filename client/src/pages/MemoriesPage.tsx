@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 import {
   useMemories,
   useCreateMemory,
@@ -13,6 +14,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { fadeUpVariants, staggerContainerVariants } from "@/lib/motion";
 import {
   BrainCircuit,
   Plus,
@@ -25,6 +27,7 @@ import {
   Calendar,
   RotateCcw,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function MemoriesPage() {
   const { data: memories, isLoading, isError, refetch } = useMemories();
@@ -111,9 +114,9 @@ export function MemoriesPage() {
             <button
               type="button"
               onClick={() => setIsAddOpen(true)}
-              className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 hover:shadow-accent-glow transition-all active:scale-[0.98] cursor-pointer subtle-focus"
+              className="inline-flex items-center justify-center gap-2 h-9 rounded-[100px] gradient-border bg-card hover:bg-secondary px-4 text-xs font-semibold text-foreground transition-all active:scale-[0.98] cursor-pointer subtle-focus"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 text-category-memories" />
               <span>Add Guideline</span>
             </button>
           }
@@ -151,7 +154,7 @@ export function MemoriesPage() {
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="h-24 rounded-xl border border-border/60 bg-surface/50 animate-pulse p-4 flex flex-col justify-between shadow-2xs"
+                className="h-24 rounded-[var(--radius-base)] border border-border/60 bg-surface/50 animate-pulse p-4 flex flex-col justify-between"
               >
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-24 rounded bg-surface-secondary" />
@@ -214,17 +217,25 @@ export function MemoriesPage() {
 
         {/* Memories List */}
         {!isLoading && !isError && filteredMemories && filteredMemories.length > 0 && (
-          <div className="mt-6 space-y-3">
+          <motion.div
+            variants={staggerContainerVariants}
+            initial="hidden"
+            animate="visible"
+            layout
+            className="mt-6 space-y-3"
+          >
             {filteredMemories.map((mem) => {
               const isEditing = editingId === mem.id;
 
               return (
-                <div
+                <motion.div
                   key={mem.id}
-                  className={`group relative rounded-xl border bg-surface p-4 sm:p-5 transition-all shadow-2xs ${
+                  layout
+                  variants={fadeUpVariants}
+                  className={`group relative rounded-[var(--radius-base)] border bg-card p-4 sm:p-5 transition-all gradient-border-hover panel-card ${
                     isEditing
-                      ? "border-accent/60 ring-2 ring-accent/15 shadow-sm"
-                      : "border-border/80 card-hover"
+                      ? "border-category-memories/60"
+                      : "border-border hover:bg-muted/30"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -233,8 +244,8 @@ export function MemoriesPage() {
                         <span
                           className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
                             mem.source === "learned"
-                              ? "bg-surface-secondary text-foreground-secondary border border-border/80"
-                              : "bg-accent-subtle text-accent border border-accent/20"
+                              ? "bg-secondary text-muted-foreground border border-border"
+                              : "bg-secondary text-category-memories border border-border"
                           }`}
                         >
                           {mem.source === "learned" ? "AI Learned" : "Manual Preference"}
@@ -273,12 +284,12 @@ export function MemoriesPage() {
                                 type="button"
                                 onClick={() => handleSaveEdit(mem.id)}
                                 disabled={updateMutation.isPending || !editingText.trim()}
-                                className="inline-flex items-center gap-1.5 h-8 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all cursor-pointer shadow-xs subtle-focus"
+                                className="inline-flex items-center gap-1.5 h-8 rounded-[100px] gradient-border bg-card hover:bg-secondary px-3.5 text-xs font-semibold text-foreground hover:text-category-memories disabled:opacity-50 transition-all cursor-pointer subtle-focus"
                               >
                                 {updateMutation.isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 ) : (
-                                  <Check className="h-3.5 w-3.5" />
+                                  <Check className="h-3.5 w-3.5 text-category-chat" />
                                 )}
                                 <span>Save Changes</span>
                               </button>
@@ -293,32 +304,34 @@ export function MemoriesPage() {
                     </div>
 
                     {!isEditing && (
-                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-                        <button
+                      <div className="flex items-center gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150 shrink-0">
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleStartEdit(mem)}
-                          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-accent hover:bg-accent-subtle/50 transition-colors cursor-pointer border border-transparent hover:border-accent/20 subtle-focus"
-                          title="Edit guideline"
-                          aria-label="Edit guideline"
+                          className="h-9 w-9 bg-card text-foreground hover:text-category-memories"
+                          aria-label="Edit memory"
                         >
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </button>
-                        <button
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
                           type="button"
+                          variant="destructive"
+                          size="icon"
                           onClick={() => setDeletingId(mem.id)}
-                          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-error hover:bg-error/10 transition-colors cursor-pointer border border-transparent hover:border-error/20 subtle-focus"
-                          title="Delete guideline"
-                          aria-label="Delete guideline"
+                          className="h-9 w-9 bg-card"
+                          aria-label="Delete memory"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </main>
 
@@ -332,10 +345,10 @@ export function MemoriesPage() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+              className="fixed inset-0 bg-overlay backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
               onClick={() => setIsAddOpen(false)}
             />
-            <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="relative w-full max-w-md rounded-[var(--radius-base)] border border-border bg-surface p-6 animate-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
                 <h3 id="add-memory-title" className="fluid-h3 text-foreground tracking-tight">
                   Add Knowledge Guideline
@@ -353,7 +366,7 @@ export function MemoriesPage() {
               <form onSubmit={handleCreate} className="mt-4 space-y-4">
                 <div>
                   <label htmlFor="guideline-text" className="block text-xs font-semibold text-foreground mb-1.5">
-                    Guideline or Preference <span className="text-accent">*</span>
+                    Guideline or Preference <span className="text-category-memories">*</span>
                   </label>
                   <textarea
                     id="guideline-text"
@@ -362,7 +375,7 @@ export function MemoriesPage() {
                     placeholder="e.g. Always format equations in LaTeX. Focus on practical implementation details in Python."
                     value={newMemoryText}
                     onChange={(e) => setNewMemoryText(e.target.value)}
-                    className="w-full rounded-lg border border-border/80 bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted subtle-focus resize-none transition-colors shadow-2xs"
+                    className="w-full rounded-lg border border-border/80 bg-surface-secondary/40 p-3 text-xs text-foreground placeholder:text-muted subtle-focus resize-none transition-colors"
                     autoFocus
                   />
                 </div>
@@ -378,7 +391,7 @@ export function MemoriesPage() {
                   <button
                     type="submit"
                     disabled={createMutation.isPending || !newMemoryText.trim()}
-                    className="inline-flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all shadow-xs hover:shadow-accent-glow cursor-pointer subtle-focus"
+                    className="inline-flex items-center justify-center gap-1.5 h-9 rounded-[100px] gradient-border bg-card hover:bg-secondary px-4 text-xs font-semibold text-foreground hover:text-category-memories disabled:opacity-50 transition-all cursor-pointer subtle-focus"
                   >
                     {createMutation.isPending && (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />

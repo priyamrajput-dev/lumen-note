@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 import { useCreateWorkspace } from "@/api/workspaces";
 import { getErrorMessage } from "@/api/client";
+import { dialogOverlayVariants, dialogContentVariants } from "@/lib/motion";
 import type { ChatModel } from "@/types";
-import { X, AlertCircle, Loader2 } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CreateWorkspaceDialogProps {
   isOpen: boolean;
@@ -39,7 +42,7 @@ export function CreateWorkspaceDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, createMutation.isPending, onClose]);
 
-  if (!isOpen || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,65 +69,77 @@ export function CreateWorkspaceDialog({
   };
 
   return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-workspace-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
-        onClick={createMutation.isPending ? undefined : onClose}
-      />
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3.5 border-b border-border/70">
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-workspace-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            variants={dialogOverlayVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 bg-overlay backdrop-blur-xs"
+            onClick={createMutation.isPending ? undefined : onClose}
+          />
+          <motion.div
+            variants={dialogContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative w-full max-w-md rounded-[var(--radius-base)] border border-border bg-card p-6 shadow-none"
+          >
+        <div className="flex items-center justify-between pb-3.5 border-b border-border">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl" aria-hidden="true">{icon}</span>
             <div>
-              <h3 id="create-workspace-title" className="fluid-h3 text-foreground tracking-tight">
+              <h3 id="create-workspace-title" className="text-base font-semibold text-foreground tracking-tight">
                 New Research Workspace
               </h3>
-              <p className="text-xs text-foreground-secondary">
+              <p className="text-xs text-muted-foreground">
                 Group sources, grounded chats, and synthesized notes.
               </p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
             disabled={createMutation.isPending}
-            className="flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-foreground hover:bg-surface-secondary transition-colors cursor-pointer subtle-focus"
+            className="text-muted-foreground hover:text-foreground"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-error/10 border border-error/25 px-3 py-2 text-xs text-error">
+          <div className="mt-4 p-3 rounded-[var(--radius-base)] bg-card border border-destructive/50 text-destructive flex items-center gap-2 text-xs">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* Icon Selector */}
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1.5">
               Workspace Icon
             </label>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 p-2 rounded-[var(--radius-base)] border border-border bg-background">
               {EMOJI_OPTIONS.map((emoji) => (
                 <button
                   key={emoji}
                   type="button"
                   onClick={() => setIcon(emoji)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all cursor-pointer subtle-focus ${
+                  className={`h-8 w-8 rounded-[var(--radius-base)] text-base flex items-center justify-center transition-all cursor-pointer ${
                     icon === emoji
-                      ? "border-accent bg-accent-subtle shadow-xs scale-105"
-                      : "border-border/80 bg-surface-secondary/60 hover:bg-surface-secondary text-foreground"
+                      ? "border border-foreground/60 bg-secondary"
+                      : "border border-transparent hover:bg-secondary"
                   }`}
-                  aria-label={`Select icon ${emoji}`}
                 >
                   {emoji}
                 </button>
@@ -132,101 +147,104 @@ export function CreateWorkspaceDialog({
             </div>
           </div>
 
-          {/* Title */}
           <div>
-            <label htmlFor="workspace-title" className="block text-xs font-semibold text-foreground mb-1">
-              Title <span className="text-accent">*</span>
+            <label htmlFor="workspace-title-input" className="block text-xs font-semibold text-foreground mb-1.5">
+              Title <span className="text-destructive">*</span>
             </label>
             <input
-              id="workspace-title"
+              id="workspace-title-input"
               type="text"
-              required
-              maxLength={120}
-              placeholder="e.g. Distributed Systems & AI Research"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full h-9 rounded-lg border border-border/80 bg-surface px-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors"
+              placeholder="e.g. Distributed Consensus Research"
+              required
+              className="w-full h-9 rounded-[var(--radius-base)] border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground transition-colors outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
             />
           </div>
 
-          {/* Description */}
           <div>
-            <label htmlFor="workspace-desc" className="block text-xs font-semibold text-foreground mb-1">
-              Description <span className="text-muted font-normal">(optional)</span>
+            <label htmlFor="workspace-desc-input" className="block text-xs font-semibold text-foreground mb-1.5">
+              Description <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <textarea
-              id="workspace-desc"
-              rows={2}
-              maxLength={500}
-              placeholder="What are you researching in this workspace?"
+              id="workspace-desc-input"
+              rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-border/80 bg-surface p-3 text-xs text-foreground placeholder:text-muted subtle-focus transition-colors resize-none"
+              placeholder="Key hypotheses, research goals, or reading objectives..."
+              className="w-full rounded-[var(--radius-base)] border border-border bg-background p-3 text-xs text-foreground placeholder:text-muted-foreground transition-colors outline-none focus:border-foreground focus:ring-1 focus:ring-foreground resize-none"
             />
           </div>
 
-          {/* Default Model */}
           <div>
-            <span className="block text-xs font-semibold text-foreground mb-1.5">
-              Default LLM Engine
-            </span>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Default LLM Synthesis Engine
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o-mini")}
-                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer subtle-focus ${
+                className={`p-3 rounded-[var(--radius-base)] border text-left transition-all cursor-pointer ${
                   defaultModel === "gpt-4o-mini"
-                    ? "border-accent bg-accent-subtle shadow-2xs"
-                    : "border-border/80 bg-surface-secondary/40 hover:bg-surface-secondary"
+                    ? "border-foreground/80 bg-background"
+                    : "border-border bg-background/50 hover:border-foreground/40"
                 }`}
               >
-                <span className="text-xs font-semibold text-foreground">gpt-4o-mini</span>
-                <span className="text-[10px] text-muted">Fast &amp; cost-efficient</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono text-xs font-semibold text-foreground">gpt-4o-mini</span>
+                  <span className="text-[10px] rounded-[100px] border border-border px-1.5 text-muted-foreground">Fast</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  High-speed retrieval &amp; study deck generation.
+                </p>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDefaultModel("gpt-4o")}
-                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer subtle-focus ${
+                className={`p-3 rounded-[var(--radius-base)] border text-left transition-all cursor-pointer ${
                   defaultModel === "gpt-4o"
-                    ? "border-accent bg-accent-subtle shadow-2xs"
-                    : "border-border/80 bg-surface-secondary/40 hover:bg-surface-secondary"
+                    ? "border-foreground/80 bg-background"
+                    : "border-border bg-background/50 hover:border-foreground/40"
                 }`}
               >
-                <span className="text-xs font-semibold text-foreground">gpt-4o</span>
-                <span className="text-[10px] text-muted">Deep reasoning</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono text-xs font-semibold text-foreground">gpt-4o</span>
+                  <span className="text-[10px] rounded-[100px] border border-category-workspaces/40 px-1.5 text-category-workspaces">Deep</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Complex reasoning &amp; multi-source synthesis.
+                </p>
               </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/70">
-            <button
+          <div className="pt-3 border-t border-border flex items-center justify-end gap-2.5">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={createMutation.isPending}
-              className="h-9 px-4 text-xs font-medium text-muted hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors cursor-pointer subtle-focus"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={createMutation.isPending || !title.trim()}
-              className="inline-flex items-center justify-center gap-2 h-9 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all shadow-xs cursor-pointer subtle-focus"
+              variant="primary"
+              size="sm"
+              loading={createMutation.isPending}
+              loadingText="Saving…"
+              disabled={!title.trim()}
             >
-              {createMutation.isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Creating...</span>
-                </>
-              ) : (
-                <span>Create Workspace</span>
-              )}
-            </button>
+              Create Workspace
+            </Button>
           </div>
         </form>
-      </div>
-    </div>,
+      </motion.div>
+    </div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }

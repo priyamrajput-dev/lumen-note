@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface GenerateArtifactModalProps {
   workspaceId: string;
@@ -114,11 +115,11 @@ export function GenerateArtifactModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-xl rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="relative w-full max-w-xl rounded-[var(--radius-base)] border border-border bg-surface p-6 animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between pb-3.5 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-subtle text-accent">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-category-artifacts border border-border">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
@@ -164,19 +165,27 @@ export function GenerateArtifactModal({
                     onClick={() => setSelectedType(opt.type)}
                     className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? "border-accent bg-accent-subtle shadow-2xs"
-                        : "border-border bg-surface-secondary/40 hover:bg-surface-secondary"
+                        ? "border-category-artifacts bg-secondary/60 ring-1 ring-category-artifacts/40"
+                        : "border-border bg-card hover:bg-muted/40"
                     }`}
                   >
                     <Icon
                       className={`h-4 w-4 mb-2 ${
-                        isSelected ? "text-accent" : "text-muted"
+                        isSelected
+                          ? opt.type === "MINDMAP"
+                            ? "text-category-sources"
+                            : opt.type === "FLASHCARDS"
+                            ? "text-category-artifacts"
+                            : opt.type === "QUIZ"
+                            ? "text-category-memories"
+                            : "text-category-workspaces"
+                          : "text-muted-foreground"
                       }`}
                     />
                     <span className="text-xs font-bold text-foreground line-clamp-1">
                       {opt.title}
                     </span>
-                    <span className="text-[10px] text-muted mt-1 line-clamp-2 leading-tight">
+                    <span className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-tight">
                       {opt.description}
                     </span>
                   </button>
@@ -213,7 +222,7 @@ export function GenerateArtifactModal({
                 <button
                   type="button"
                   onClick={handleSelectAllSources}
-                  className="text-[11px] text-accent hover:underline cursor-pointer"
+                  className="text-[11px] text-category-artifacts hover:underline cursor-pointer"
                 >
                   {selectedSourceIds.length === sources.length
                     ? "Deselect All"
@@ -221,22 +230,22 @@ export function GenerateArtifactModal({
                 </button>
               </div>
 
-              <div className="max-h-28 overflow-y-auto space-y-1 rounded-xl border border-border bg-surface-secondary/30 p-2 text-xs">
+              <div className="max-h-28 overflow-y-auto space-y-1 rounded-xl border border-border bg-secondary/30 p-2 text-xs">
                 {sources.map((src) => {
                   const isChecked = selectedSourceIds.includes(src.id);
                   return (
                     <div
                       key={src.id}
                       onClick={() => toggleSource(src.id)}
-                      className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-surface-secondary cursor-pointer text-foreground"
+                      className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-secondary cursor-pointer text-foreground"
                     >
                       {isChecked ? (
-                        <CheckSquare className="h-3.5 w-3.5 text-accent" />
+                        <CheckSquare className="h-3.5 w-3.5 text-category-artifacts" />
                       ) : (
-                        <Square className="h-3.5 w-3.5 text-muted" />
+                        <Square className="h-3.5 w-3.5 text-muted-foreground" />
                       )}
                       <span className="truncate flex-1 text-xs">{src.title}</span>
-                      <span className="text-[10px] font-mono text-muted">
+                      <span className="text-[10px] font-mono text-muted-foreground">
                         {src.type}
                       </span>
                     </div>
@@ -247,27 +256,24 @@ export function GenerateArtifactModal({
           )}
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
-              className="px-3.5 py-1.5 text-xs text-muted hover:text-foreground cursor-pointer"
+              disabled={createMutation.isPending}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={createMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
+              variant="primary"
+              size="sm"
+              loading={createMutation.isPending}
+              loadingText="Generating…"
             >
-              {createMutation.isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Synthesizing...</span>
-                </>
-              ) : (
-                <span>Generate Artifact</span>
-              )}
-            </button>
+              Generate Artifact
+            </Button>
           </div>
         </form>
       </div>

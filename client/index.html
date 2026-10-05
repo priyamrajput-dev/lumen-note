@@ -1,17 +1,58 @@
 <!doctype html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lumen Note - AI-native second brain for research, study, and knowledge synthesis." />
-    <title>Lumen Note — Personal AI Research Workspace</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  </head>
-  <body class="min-h-screen font-sans antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="color-scheme" content="dark light" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e100f" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fffce1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="LumenNote — Turn your research sources into understanding with grounded AI chat, verifiable citations, and active study artifacts."
+        />
+
+        <!-- Open Graph & Twitter Meta -->
+        <meta property="og:title" content="LumenNote — Turn your sources into understanding" />
+        <meta
+            property="og:description"
+            content="Add PDFs, YouTube videos, and web pages to a workspace, then ask questions and get answers with citations you can check."
+        />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="LumenNote — Turn your sources into understanding" />
+        <meta
+            name="twitter:description"
+            content="Add PDFs, YouTube videos, and web pages to a workspace, then ask questions and get answers with citations you can check."
+        />
+
+        <title>LumenNote — Turn your sources into understanding</title>
+
+        <script>
+            (function () {
+                try {
+                    var saved = localStorage.getItem('lumen-theme');
+                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme =
+                        saved === 'light' || saved === 'dark'
+                            ? saved
+                            : prefersDark
+                              ? 'dark'
+                              : 'light';
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {}
+            })();
+        </script>
+
+
+    </head>
+    <body class="min-h-screen font-sans antialiased">
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
 </html>

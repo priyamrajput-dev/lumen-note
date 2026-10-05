@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import {
   useSources,
   useDeleteSource,
@@ -6,10 +7,16 @@ import {
   type SourceFilters,
 } from "@/api/sources";
 import type { Source, SourceType, SourceStatus } from "@/types";
-import { AddSourceModal } from "./AddSourceModal";
-import { SourcePreviewDrawer } from "./SourcePreviewDrawer";
+const AddSourceModal = React.lazy(() =>
+  import("./AddSourceModal").then((m) => ({ default: m.AddSourceModal }))
+);
+const SourcePreviewDrawer = React.lazy(() =>
+  import("./SourcePreviewDrawer").then((m) => ({ default: m.SourcePreviewDrawer }))
+);
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { fadeUpVariants, staggerContainerVariants } from "@/lib/motion";
 import {
   Plus,
   FileUp,
@@ -25,6 +32,7 @@ import {
   Eye,
   FileCode,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SourcesPanelProps {
   workspaceId: string;
@@ -130,56 +138,35 @@ export function SourcesPanel({
   const getSourceIcon = (type: SourceType) => {
     switch (type) {
       case "PDF":
-        return <FileText className="h-3.5 w-3.5 text-rose-500" />;
+        return <FileText className="h-3.5 w-3.5 text-category-memories" />;
       case "WEBSITE":
-        return <Globe className="h-3.5 w-3.5 text-blue-500" />;
+        return <Globe className="h-3.5 w-3.5 text-category-sources" />;
       case "YOUTUBE":
-        return <Video className="h-3.5 w-3.5 text-red-500" />;
+        return <Video className="h-3.5 w-3.5 text-category-artifacts" />;
       case "MARKDOWN":
       case "TEXT":
       default:
-        return <FileCode className="h-3.5 w-3.5 text-accent" />;
+        return <FileCode className="h-3.5 w-3.5 text-muted-foreground" />;
     }
   };
 
-  const getStatusBadge = (status: SourceStatus) => {
-    switch (status) {
-      case "READY":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-success-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-success border border-success/20">
-            <CheckCircle2 className="h-2.5 w-2.5" />
-            Ready
-          </span>
-        );
-      case "PROCESSING":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-primary-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-primary border border-primary/25">
-            <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            Indexing
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-error-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-error border border-error/20">
-            <AlertTriangle className="h-2.5 w-2.5" />
-            Failed
-          </span>
-        );
-      case "PENDING":
+  const getSourceTypeTextColor = (type: SourceType) => {
+    switch (type) {
+      case "PDF":
+        return "text-category-memories";
+      case "WEBSITE":
+        return "text-category-sources";
+      case "YOUTUBE":
+        return "text-category-artifacts";
       default:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-warning-subtle px-1.5 py-0.5 text-[9px] font-mono font-medium text-warning border border-warning/20">
-            <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            Queued
-          </span>
-        );
+        return "text-muted-foreground";
     }
   };
 
   return (
     <div className="flex h-full flex-col bg-surface/40 text-foreground overflow-hidden">
       {/* Top Header & Action */}
-      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-3.5 py-2.5 bg-surface/90 shrink-0 shadow-2xs">
+      <div className="flex items-center justify-between gap-2 border-b border-border/70 px-3.5 py-2.5 bg-surface/90 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
             Sources
@@ -191,27 +178,31 @@ export function SourcesPanel({
 
         <div className="flex items-center gap-1.5">
           {selectedIds.length > 0 && (
-            <button
+            <Button
               type="button"
+              variant="destructive"
+              size="sm"
               onClick={() => setShowBulkDeleteConfirm(true)}
               disabled={bulkDeleteMutation.isPending}
-              className="inline-flex items-center gap-1 h-7 rounded-lg bg-error/10 border border-error/20 px-2 text-[10px] font-medium text-error hover:bg-error/20 transition-colors cursor-pointer subtle-focus"
+              className="h-7 px-2 text-[10px] gap-1"
               title="Delete selected sources"
               aria-label={`Delete ${selectedIds.length} selected sources`}
             >
               <Trash2 className="h-3 w-3" />
               <span>Delete ({selectedIds.length})</span>
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer subtle-focus"
+            className="h-7 px-2.5 text-xs gap-1"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -262,7 +253,7 @@ export function SourcesPanel({
       </div>
 
       {/* Sources List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scroll-fade-edges">
         {isLoading && (
           <div className="space-y-2 p-1">
             {[1, 2, 3].map((i) => (
@@ -282,7 +273,7 @@ export function SourcesPanel({
 
         {!isLoading && !isError && sources?.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/40 py-10 px-4 text-center my-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border text-accent mb-2.5 shadow-2xs">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary border border-border text-category-sources mb-2.5">
               <FileUp className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-foreground">No sources added</h4>
@@ -292,7 +283,7 @@ export function SourcesPanel({
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
-              className="mt-3 inline-flex items-center gap-1 h-7 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer subtle-focus"
+              className="mt-3 inline-flex items-center gap-1 h-7 rounded-[100px] gradient-border bg-card hover:bg-secondary px-3 text-xs font-semibold text-foreground hover:text-category-sources transition-colors cursor-pointer subtle-focus"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Add Source</span>
@@ -303,7 +294,7 @@ export function SourcesPanel({
         {!isLoading && !isError && sources && sources.length > 0 && (
           <>
             {/* Grounding Selection Bar */}
-            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-surface-secondary/40 border border-border/60 text-[10px] font-mono text-muted mb-1">
+            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-secondary/40 border border-border text-[10px] font-mono text-muted-foreground mb-1">
               <button
                 type="button"
                 onClick={toggleSelectAll}
@@ -311,9 +302,9 @@ export function SourcesPanel({
                 title={allSelected ? "Deselect all sources" : "Select all sources for chat grounding"}
               >
                 {allSelected ? (
-                  <CheckSquare className="h-3.5 w-3.5 text-accent" />
+                  <CheckSquare className="h-3.5 w-3.5 text-category-sources" />
                 ) : (
-                  <Square className="h-3.5 w-3.5 text-muted" />
+                  <Square className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
                 <span>
                   {selectedIds.length > 0 && selectedIds.length < sources.length
@@ -329,111 +320,135 @@ export function SourcesPanel({
                     if (onClearSourceSelection) onClearSourceSelection();
                     else setInternalSelectedIds([]);
                   }}
-                  className="text-[10px] text-accent hover:underline cursor-pointer font-sans font-medium"
+                  className="text-[10px] text-category-sources hover:underline cursor-pointer font-sans font-medium"
                 >
                   Reset to all
                 </button>
               )}
             </div>
 
-            {sources.map((src) => {
-              const isSelected = selectedIds.includes(src.id);
-              return (
-                <div
-                  key={src.id}
-                  className={`@container group relative flex flex-col rounded-lg border p-2.5 transition-all text-xs ${
-                    isSelected
-                      ? "border-accent/60 bg-accent-subtle/40 ring-1 ring-accent/30"
-                      : "border-border/80 bg-surface hover:border-border hover:bg-surface-secondary/40 shadow-2xs"
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleSelectOne(src.id)}
-                      className="text-muted hover:text-foreground mt-0.5 shrink-0 cursor-pointer subtle-focus rounded p-0.5"
-                      aria-label={`Select source ${src.title} for chat grounding`}
-                      title={isSelected ? "Remove from active chat context" : "Select to chat specifically with this source"}
-                    >
-                      {isSelected ? (
-                        <CheckSquare className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Square className="h-4 w-4 text-muted hover:text-foreground" />
-                      )}
-                    </button>
+            <motion.div
+              variants={staggerContainerVariants}
+              initial="hidden"
+              animate="visible"
+              layout
+              className="space-y-1.5"
+            >
+              {sources.map((src) => {
+                const isSelected = selectedIds.includes(src.id);
+                return (
+                  <motion.div
+                    key={src.id}
+                    layout
+                    variants={fadeUpVariants}
+                    className={`@container group relative flex flex-col rounded-lg border p-2.5 transition-all text-xs gradient-border-hover panel-card ${
+                      src.status === "PROCESSING" ? "gradient-border-active " : ""
+                    }${
+                      isSelected
+                        ? "border-category-sources/50 bg-secondary/50"
+                        : "border-border bg-card hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleSelectOne(src.id)}
+                        className="text-muted-foreground hover:text-foreground mt-0.5 shrink-0 cursor-pointer subtle-focus rounded p-0.5"
+                        aria-label={`Select source ${src.title} for chat grounding`}
+                        title={isSelected ? "Remove from active chat context" : "Select to chat specifically with this source"}
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="h-4 w-4 text-category-sources" />
+                        ) : (
+                          <Square className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                        )}
+                      </button>
 
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-secondary border border-border/70">
-                      {getSourceIcon(src.type)}
-                    </div>
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary border border-border">
+                        {getSourceIcon(src.type)}
+                      </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewSource(src)}
-                          className="font-medium text-foreground hover:text-accent truncate text-left transition-colors text-xs cursor-pointer block max-w-[160px] subtle-focus"
-                          title={src.title}
-                        >
-                          {src.title}
-                        </button>
-
-                        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-1">
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewSource(src);
-                            }}
-                            className="flex items-center justify-center h-6 w-6 rounded text-muted hover:text-foreground hover:bg-surface-secondary cursor-pointer subtle-focus"
-                            title="Preview document"
-                            aria-label={`Preview document ${src.title}`}
+                            onClick={() => setPreviewSource(src)}
+                            className="font-medium text-foreground hover:text-category-sources truncate text-left transition-colors text-xs cursor-pointer block max-w-[160px] subtle-focus"
+                            title={src.title}
                           >
-                            <Eye className="h-3.5 w-3.5" />
+                            {src.title}
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToDelete({ id: src.id, title: src.title });
-                            }}
-                            className="flex items-center justify-center h-6 w-6 rounded text-muted hover:text-error hover:bg-error/10 cursor-pointer subtle-focus"
-                            title="Delete source"
-                            aria-label={`Delete source ${src.title}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+
+                          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shrink-0">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewSource(src);
+                              }}
+                              className="text-muted-foreground hover:text-foreground"
+                              title="Preview document"
+                              aria-label={`Preview document ${src.title}`}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSourceToDelete({ id: src.id, title: src.title });
+                              }}
+                              className="text-muted-foreground hover:text-destructive"
+                              title="Delete source"
+                              aria-label={`Delete source ${src.title}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono">
+                          <span className={`rounded bg-secondary px-1.5 py-0.5 border border-border font-semibold ${getSourceTypeTextColor(src.type)}`}>
+                            {src.type}
+                          </span>
+
+                          <StatusBadge status={src.status} />
                         </div>
                       </div>
-
-                      <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono text-muted">
-                        <span className="rounded bg-surface-secondary px-1 py-0.2 border border-border/70">
-                          {src.type}
-                        </span>
-
-                        {getStatusBadge(src.status)}
-                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </>
         )}
       </div>
 
       {/* Add Source Modal */}
-      <AddSourceModal
-        workspaceId={workspaceId}
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
+      {isAddModalOpen && (
+        <React.Suspense fallback={null}>
+          <AddSourceModal
+            workspaceId={workspaceId}
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Source Preview Drawer */}
-      <SourcePreviewDrawer
-        source={previewSource}
-        isOpen={Boolean(previewSource)}
-        onClose={() => setPreviewSource(null)}
-      />
+      {Boolean(previewSource) && (
+        <React.Suspense fallback={null}>
+          <SourcePreviewDrawer
+            source={previewSource}
+            isOpen={Boolean(previewSource)}
+            onClose={() => setPreviewSource(null)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Single Delete Confirm */}
       <ConfirmDialog

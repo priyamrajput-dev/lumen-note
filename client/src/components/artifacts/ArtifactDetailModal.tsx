@@ -9,14 +9,22 @@ import type {
   ArtifactSummaryContent,
   ArtifactReportContent,
 } from "@/types";
-import { FlashcardDeck } from "./FlashcardDeck";
-import { QuizView } from "./QuizView";
-import { MindmapView } from "./MindmapView";
+const FlashcardDeck = React.lazy(() =>
+  import("./FlashcardDeck").then((m) => ({ default: m.FlashcardDeck }))
+);
+const QuizView = React.lazy(() =>
+  import("./QuizView").then((m) => ({ default: m.QuizView }))
+);
+const MindmapView = React.lazy(() =>
+  import("./MindmapView").then((m) => ({ default: m.MindmapView }))
+);
 import {
   X,
   Copy,
   Check,
 } from "lucide-react";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
 
 interface ArtifactDetailModalProps {
   artifact: LearningArtifact | null;
@@ -66,9 +74,9 @@ export function ArtifactDetailModal({
             {takeaways.items?.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4 text-xs leading-relaxed text-foreground shadow-2xs"
+                className="flex items-start gap-3 rounded-[var(--radius-base)] border border-border bg-surface p-4 text-xs leading-relaxed text-foreground"
               >
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent-subtle text-accent text-[10px] font-mono font-bold mt-0.5">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-secondary text-category-workspaces text-[10px] font-mono font-bold mt-0.5">
                   {idx + 1}
                 </div>
                 <p>{item}</p>
@@ -81,7 +89,7 @@ export function ArtifactDetailModal({
         const sum = artifact.content as ArtifactSummaryContent;
         return (
           <div className="max-w-3xl mx-auto p-6">
-            <div className="rounded-2xl border border-border bg-surface p-6 font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap selection:bg-accent-subtle shadow-xs">
+            <div className="rounded-[var(--radius-base)] border border-border bg-surface p-6 font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap selection:bg-accent-subtle">
               {sum.markdown || JSON.stringify(artifact.content, null, 2)}
             </div>
           </div>
@@ -95,9 +103,9 @@ export function ArtifactDetailModal({
               rep.sections.map((sec, idx) => (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-border bg-surface p-6 space-y-2 shadow-xs"
+                  className="rounded-[var(--radius-base)] border border-border bg-surface p-6 space-y-2"
                 >
-                  <h4 className="text-sm font-bold text-accent">
+                  <h4 className="text-sm font-bold text-foreground">
                     {sec.title}
                   </h4>
                   <div className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
@@ -106,7 +114,7 @@ export function ArtifactDetailModal({
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-border bg-surface p-6 font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap shadow-xs">
+              <div className="rounded-[var(--radius-base)] border border-border bg-surface p-6 font-mono text-xs text-foreground leading-relaxed whitespace-pre-wrap">
                 {rep.markdown || JSON.stringify(artifact.content, null, 2)}
               </div>
             )}
@@ -123,14 +131,26 @@ export function ArtifactDetailModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="relative flex flex-col w-full max-w-4xl max-h-[90vh] rounded-[var(--radius-base)] border border-border bg-surface overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-surface-secondary/50 shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="rounded bg-accent-subtle text-accent border border-accent/25 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase">
+            <span
+              className={cn(
+                "rounded bg-secondary border border-border px-2 py-0.5 text-[10px] font-mono font-semibold uppercase",
+                artifact.type === "MINDMAP"
+                  ? "text-category-sources"
+                  : artifact.type === "FLASHCARDS"
+                  ? "text-category-artifacts"
+                  : artifact.type === "QUIZ"
+                  ? "text-category-memories"
+                  : "text-category-workspaces"
+              )}
+            >
               {artifact.type}
             </span>
+            <StatusBadge status={artifact.status} />
             <h3 className="text-sm sm:text-base font-bold text-foreground truncate max-w-md">
               {artifact.title}
             </h3>
@@ -168,7 +188,15 @@ export function ArtifactDetailModal({
 
         {/* Content View */}
         <div className="flex-1 overflow-y-auto bg-background/50">
-          {renderContent()}
+          <React.Suspense
+            fallback={
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground animate-pulse">
+                Loading artifact view...
+              </div>
+            }
+          >
+            {renderContent()}
+          </React.Suspense>
         </div>
       </div>
     </div>,

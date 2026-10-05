@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { SpinnerIcon } from "@phosphor-icons/react"
+import { Loader2 as SpinnerIcon } from "lucide-react"
 
 function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
   return (
