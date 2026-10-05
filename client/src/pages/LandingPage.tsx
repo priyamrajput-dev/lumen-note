@@ -24,6 +24,7 @@ import {
   GraduationCap,
   Briefcase,
   Layers,
+  MessageSquare,
 } from "lucide-react";
 import {
   motion,
@@ -233,8 +234,8 @@ function WordRevealHeading({
         <span key={i} className="inline-block overflow-hidden">
           <motion.span
             className="inline-block"
-            initial={{ clipPath: "inset(100% 0% 0% 0%)", y: "30%", opacity: 0 }}
-            whileInView={{ clipPath: "inset(0% 0% 0% 0%)", y: 0, opacity: 1 }}
+            initial={{ y: "30%", opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.1 }}
             transition={{
               duration: 0.45,
@@ -963,12 +964,87 @@ export function LandingPage() {
             </p>
           </div>
 
+          {/* Tripartite Studio Explanation Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Panel 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-[var(--radius-base)] border border-border bg-card p-6 sm:p-8 space-y-4 gradient-border-hover transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold tracking-wider uppercase text-category-sources">
+                  Left Panel
+                </span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border border-border text-category-sources card-icon-tile">
+                  <FileText className="h-4 w-4" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground tracking-[-0.01em]">
+                <span className="card-title-underline">Documents on the left</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Upload PDF articles, web documentation, and YouTube transcripts. Content is extracted and indexed into semantic vector chunks for grounded context.
+              </p>
+            </motion.div>
+
+            {/* Panel 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.35, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-[var(--radius-base)] border border-border bg-card p-6 sm:p-8 space-y-4 gradient-border-hover transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold tracking-wider uppercase text-category-chat">
+                  Center Panel
+                </span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border border-border text-category-chat card-icon-tile">
+                  <MessageSquare className="h-4 w-4" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground tracking-[-0.01em]">
+                <span className="card-title-underline">Query in the center</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Chat with your research in natural language. Every answer is substantiated with inline citations pointing to original passages and page numbers.
+              </p>
+            </motion.div>
+
+            {/* Panel 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.35, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-[var(--radius-base)] border border-border bg-card p-6 sm:p-8 space-y-4 gradient-border-hover transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold tracking-wider uppercase text-category-artifacts">
+                  Right Panel
+                </span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border border-border text-category-artifacts card-icon-tile">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground tracking-[-0.01em]">
+                <span className="card-title-underline">Artifacts on the right</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Synthesize key concepts into active study tools: 3D flip flashcards, comprehension quizzes with instant rationales, and visual concept mind maps.
+              </p>
+            </motion.div>
+          </div>
+
           <motion.div
             style={{ y: previewMockY }}
-            initial={{ clipPath: "inset(100% 0% 0% 0%)", scale: 1.03, opacity: 0 }}
-            whileInView={{ clipPath: "inset(0% 0% 0% 0%)", scale: 1, opacity: 1 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.05 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="rounded-[var(--radius-base)] border border-border bg-card overflow-hidden shadow-none gradient-border-hover"
           >
             {/* Mock Window Top Bar */}
