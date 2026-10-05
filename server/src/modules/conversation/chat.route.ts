@@ -2,6 +2,10 @@ import { Router } from "express";
 import { asyncHandler } from "../../common/utils/aync-handler.js";
 import { requireAuth } from "../../common/middleware/require-auth.middleware.js";
 import { chatController } from "./chat.controller.js";
+import {
+  chatRateLimiter,
+  mutationRateLimiter,
+} from "../../common/config/rate-limits.js";
 
 export const chatRoutes = Router({ mergeParams: true });
 
@@ -10,6 +14,7 @@ chatRoutes.use(requireAuth);
 // Streaming chat endpoint: POST /api/workspaces/:workspaceId/chat
 chatRoutes.post(
   "/",
+  chatRateLimiter,
   asyncHandler(chatController.chat.bind(chatController)),
 );
 
@@ -21,6 +26,7 @@ chatRoutes.get(
 
 chatRoutes.post(
   "/conversations",
+  mutationRateLimiter,
   asyncHandler(chatController.createConversation.bind(chatController)),
 );
 
@@ -31,5 +37,6 @@ chatRoutes.get(
 
 chatRoutes.delete(
   "/conversations/:conversationId",
+  mutationRateLimiter,
   asyncHandler(chatController.deleteConversation.bind(chatController)),
 );

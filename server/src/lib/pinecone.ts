@@ -80,6 +80,9 @@ export type VectorMetadata = {
   page?: number;
 };
 
+import crypto from "crypto";
+import { buildCacheKey, getOrSetCache, delCachePattern } from "./cache.js";
+
 export async function upsertSourceVectors(
   workspaceId: string,
   records: PineconeRecord<VectorMetadata>[],
@@ -95,6 +98,9 @@ export async function upsertSourceVectors(
   for (let i = 0; i < records.length; i += batchSize) {
     await namespace.upsert({ records: records.slice(i, i + batchSize) });
   }
+
+  // Invalidate cached query results for this workspace
+  await delCachePattern(buildCacheKey("pinecone", workspaceId, "*"));
 }
 
 export async function deleteSourceVectors(
@@ -108,6 +114,7 @@ export async function deleteSourceVectors(
     for (let i = 0; i < vectorIds.length; i += batchSize) {
       await index.namespace(workspaceId).deleteMany(vectorIds.slice(i, i + batchSize));
     }
+    await delCachePattern(buildCacheKey("pinecone", workspaceId, "*"));
   } catch (error) {
     console.warn("Failed to delete vectors by ID from Pinecone:", error);
   }
@@ -117,6 +124,7 @@ export async function deleteWorkspaceVectors(workspaceId: string) {
   try {
     const index = await getPineconeIndex();
     await index.namespace(workspaceId).deleteAll();
+    await delCachePattern(buildCacheKey("pinecone", workspaceId, "*"));
   } catch (error) {
     console.warn("Failed to delete workspace vectors from Pinecone:", error);
   }
@@ -127,14 +135,24 @@ export async function queryWorkspaceVectors(
   vector: number[],
   topK: number,
 ) {
-  const index = await getPineconeIndex();
-  const result = await index.namespace(workspaceId).query({
-    vector,
-    topK,
-    includeMetadata: true,
-  });
+  const vectorHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(vector))
+    .digest("hex")
+    .slice(0, 16);
 
-  return result.matches ?? [];
+  const cacheKey = buildCacheKey("pinecone", workspaceId, vectorHash, topK);
+
+  return getOrSetCache(cacheKey, 600, async () => {
+    const index = await getPineconeIndex();
+    const result = await index.namespace(workspaceId).query({
+      vector,
+      topK,
+      includeMetadata: true,
+    });
+
+    return result.matches ?? [];
+  });
 }
 
 export { indexName as PINECONE_INDEX_NAME };

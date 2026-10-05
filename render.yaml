@@ -10,3 +10,16 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # - key: REDIS_URL
+      #   sync: false # Set manually in Render Dashboard from Upstash or Render Managed Redis:
+      #               # e.g., rediss://default:<password>@<host>:6379
+      # - key: RATE_LIMIT_ENABLED
+      #   value: "true"
+
+# Optional: Render Managed Redis (Starter plan or above, not available on free tier)
+#   - type: redis
+#     name: lumen-note-redis
+#     region: oregon
+#     plan: starter
+#     maxmemoryPolicy: noeviction
+#     ipAllowList: []

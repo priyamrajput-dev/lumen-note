@@ -6,6 +6,11 @@ import { auth } from "./lib/auth.js";
 import { registerRoutes } from "./modules/route.js";
 import { errorHandler } from "./common/middleware/error-handler.middleware.js";
 import { env } from "./common/config/env.js";
+import { isRedisHealthy } from "./lib/redis.js";
+import {
+  globalApiRateLimiter,
+  authRateLimiter,
+} from "./common/config/rate-limits.js";
 
 import { inngest } from "./inngest/client.js";
 import { serve } from "inngest/express";
@@ -41,12 +46,16 @@ export function createApplication(): Express {
 
   app.use(express.json());
 
-  app.get(["/", "/health", "/api/health"], (_req, res) => {
+  app.get(["/", "/health", "/api/health"], async (_req, res) => {
+    const redisConnected = await isRedisHealthy();
     res.status(200).json({
       status: "ok",
       message: "Lumen Note API is running",
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.floor(process.uptime()),
+      services: {
+        redis: redisConnected ? "healthy" : "unhealthy",
+      },
     });
   });
 
@@ -56,7 +65,7 @@ export function createApplication(): Express {
 
   const authHandler = toNodeHandler(auth);
 
-  app.all("/api/auth/{*any}", (req, res, next) => {
+  app.all("/api/auth/{*any}", authRateLimiter, (req, res, next) => {
     const isCallback =
       req.path.includes("/callback/") ||
       (req.originalUrl && req.originalUrl.includes("/callback/"));
@@ -110,6 +119,9 @@ export function createApplication(): Express {
       functions,
     }),
   );
+
+  // Global API rate limiter safety net
+  app.use("/api", globalApiRateLimiter);
 
   // routes
   registerRoutes(app);

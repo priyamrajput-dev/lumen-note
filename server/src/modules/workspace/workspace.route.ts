@@ -4,6 +4,7 @@ import WorkspaceService from "./workspace.service.js";
 import WorkspaceRepository from "./workspace.repository.js";
 import { requireAuth } from "../../common/middleware/require-auth.middleware.js";
 import { asyncHandler } from "../../common/utils/aync-handler.js";
+import { mutationRateLimiter } from "../../common/config/rate-limits.js";
 
 export const workspaceRoutes = Router();
 
@@ -20,6 +21,7 @@ workspaceRoutes.get(
 );
 workspaceRoutes.post(
   "/",
+  mutationRateLimiter,
   asyncHandler(workspaceController.createWorkspace.bind(workspaceController)),
 );
 workspaceRoutes.get(
@@ -28,9 +30,11 @@ workspaceRoutes.get(
 );
 workspaceRoutes.patch(
   "/:workspaceId",
+  mutationRateLimiter,
   asyncHandler(workspaceController.updateWorkspace.bind(workspaceController)),
 );
 workspaceRoutes.delete(
   "/:workspaceId",
+  mutationRateLimiter,
   asyncHandler(workspaceController.deleteWorkspace.bind(workspaceController)),
 );

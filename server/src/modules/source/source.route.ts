@@ -6,6 +6,10 @@ import SourceRepository from "./source.repository.js";
 import WorkspaceRepository from "../workspace/workspace.repository.js";
 import { requireAuth } from "../../common/middleware/require-auth.middleware.js";
 import { uploadSinglePdf } from "../../common/middleware/upload.middleware.js";
+import {
+  sourceImportRateLimiter,
+  mutationRateLimiter,
+} from "../../common/config/rate-limits.js";
 
 export const sourceRoutes = Router({ mergeParams: true });
 
@@ -23,27 +27,32 @@ sourceRoutes.get(
 
 sourceRoutes.post(
   "/",
+  mutationRateLimiter,
   asyncHandler(sourceController.createSource.bind(sourceController)),
 );
 
 sourceRoutes.post(
   "/upload",
+  sourceImportRateLimiter,
   uploadSinglePdf,
   asyncHandler(sourceController.uploadPdf.bind(sourceController)),
 );
 
 sourceRoutes.post(
   "/import/website",
+  sourceImportRateLimiter,
   asyncHandler(sourceController.importWebsite.bind(sourceController)),
 );
 
 sourceRoutes.post(
   "/import/youtube",
+  sourceImportRateLimiter,
   asyncHandler(sourceController.importYoutube.bind(sourceController)),
 );
 
 sourceRoutes.post(
   "/bulk-delete",
+  mutationRateLimiter,
   asyncHandler(sourceController.bulkDeleteSources.bind(sourceController)),
 );
 
@@ -54,5 +63,6 @@ sourceRoutes.get(
 
 sourceRoutes.delete(
   "/:sourceId",
+  mutationRateLimiter,
   asyncHandler(sourceController.deleteSource.bind(sourceController)),
 );

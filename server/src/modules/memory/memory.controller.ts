@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
-import { deleteUserMemory, listUserMemories } from "../../lib/mem0.js";
 import {
   createMemoryForUser,
+  deleteMemoryForUser,
+  listMemoriesForUser,
   updateMemoryForUser,
 } from "./memory.service.js";
 import { ValidationError } from "../../common/utils/app-error.js";
@@ -39,7 +40,7 @@ class MemoryController {
   }
 
   async listMemories(req: Request, res: Response) {
-    const memories = await listUserMemories(req.session.user.id);
+    const memories = await listMemoriesForUser(req.session.user.id);
     AppResponse.ok(res, "Memories retrieved successfully", memories);
   }
 
@@ -62,7 +63,7 @@ class MemoryController {
 
   async deleteMemory(req: Request, res: Response) {
     const { memoryId } = this.parseMemoryId(req.params);
-    await deleteUserMemory(memoryId);
+    await deleteMemoryForUser(req.session.user.id, memoryId);
     AppResponse.ok(res, "Memory deleted successfully");
   }
 }

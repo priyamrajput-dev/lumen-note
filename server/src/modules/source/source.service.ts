@@ -13,12 +13,25 @@ import { scrapeWebsite } from "../../lib/firecrawl.js";
 import { fetchYoutubeTranscript } from "../../lib/youtube.js";
 import { enqueueSourceProcessing } from "../../lib/source-events.js";
 import { removeSourceFromIndex } from "./source-processing.service.js";
+import {
+  buildCacheKey,
+  getOrSetCache,
+  delCache,
+  delCachePattern,
+} from "../../lib/cache.js";
 
 class SourceService {
   constructor(
     private readonly sourceRepository: SourceRepository,
     private readonly workspaceRepository: WorkspaceRepository,
   ) {}
+
+  private async invalidateSourceCache(workspaceId: string, sourceId?: string) {
+    if (sourceId) {
+      await delCache(buildCacheKey("source", sourceId));
+    }
+    await delCachePattern(buildCacheKey("sources", workspaceId, "*"));
+  }
 
   private async assertWorkspaceAccess(workspaceId: string, userId: string) {
     const [ws] = await this.workspaceRepository.findWorkspaceByIdAndUserId(
@@ -37,7 +50,10 @@ class SourceService {
     filters: ListSourcesQuery = {},
   ): Promise<SourceRecord[]> {
     await this.assertWorkspaceAccess(workspaceId, userId);
-    return this.sourceRepository.findSourcesByWorkspaceId(workspaceId, filters);
+    const key = buildCacheKey("sources", workspaceId, JSON.stringify(filters));
+    return getOrSetCache(key, 180, () =>
+      this.sourceRepository.findSourcesByWorkspaceId(workspaceId, filters),
+    );
   }
 
   async getSourceForWorkspace(
@@ -47,16 +63,19 @@ class SourceService {
   ): Promise<SourceRecord> {
     await this.assertWorkspaceAccess(workspaceId, userId);
 
-    const sourceRecord = await this.sourceRepository.findSourceByIdAndWorkspaceId(
-      sourceId,
-      workspaceId,
-    );
+    const key = buildCacheKey("source", sourceId);
+    return getOrSetCache(key, 300, async () => {
+      const sourceRecord = await this.sourceRepository.findSourceByIdAndWorkspaceId(
+        sourceId,
+        workspaceId,
+      );
 
-    if (!sourceRecord) {
-      throw new NotFoundError("Source not found");
-    }
+      if (!sourceRecord) {
+        throw new NotFoundError("Source not found");
+      }
 
-    return sourceRecord;
+      return sourceRecord;
+    });
   }
 
   async createTextOrMarkdownSource(
@@ -78,6 +97,8 @@ class SourceService {
       sourceId: record.id,
       workspaceId: record.workspaceId,
     });
+
+    await this.invalidateSourceCache(workspaceId, record.id);
 
     return record;
   }
@@ -142,6 +163,8 @@ class SourceService {
       workspaceId: record.workspaceId,
     });
 
+    await this.invalidateSourceCache(workspaceId, record.id);
+
     return record;
   }
 
@@ -170,6 +193,8 @@ class SourceService {
       sourceId: record.id,
       workspaceId: record.workspaceId,
     });
+
+    await this.invalidateSourceCache(workspaceId, record.id);
 
     return record;
   }
@@ -202,6 +227,8 @@ class SourceService {
       workspaceId: record.workspaceId,
     });
 
+    await this.invalidateSourceCache(workspaceId, record.id);
+
     return record;
   }
 
@@ -213,6 +240,7 @@ class SourceService {
     await this.getSourceForWorkspace(workspaceId, sourceId, userId);
     await removeSourceFromIndex(workspaceId, sourceId);
     await this.sourceRepository.deleteSourceRecord(sourceId);
+    await this.invalidateSourceCache(workspaceId, sourceId);
   }
 
   async bulkDeleteSourcesForWorkspace(
@@ -225,6 +253,7 @@ class SourceService {
       await removeSourceFromIndex(workspaceId, sourceId);
     }
     await this.sourceRepository.bulkDeleteSourceRecords(sourceIds, workspaceId);
+    await this.invalidateSourceCache(workspaceId);
   }
 }
 

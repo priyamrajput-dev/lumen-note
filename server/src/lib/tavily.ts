@@ -69,38 +69,45 @@ async function searchWebFallback(query: string): Promise<TavilySearchResponse> {
   }
 }
 
+import { buildCacheKey, getOrSetCache } from "./cache.js";
+
 export async function searchWeb(query: string): Promise<TavilySearchResponse> {
-  const apiKey = env.TAVILY_API_KEY?.trim();
+  const normalizedQuery = query.trim().toLowerCase();
+  const cacheKey = buildCacheKey("tavily", Buffer.from(normalizedQuery).toString("base64url"));
 
-  if (apiKey) {
-    try {
-      if (!client) {
-        client = tavily({ apiKey });
+  return getOrSetCache(cacheKey, 3600, async () => {
+    const apiKey = env.TAVILY_API_KEY?.trim();
+
+    if (apiKey) {
+      try {
+        if (!client) {
+          client = tavily({ apiKey });
+        }
+
+        const response = await client.search(query, {
+          searchDepth: "basic",
+          maxResults: 5,
+          includeAnswer: true,
+        });
+
+        return {
+          query,
+          answer:
+            typeof response.answer === "string" ? response.answer : undefined,
+          results: (response.results ?? []).map((result) => ({
+            title: result.title ?? result.url ?? "Untitled",
+            url: result.url ?? "",
+            content: result.content ?? "",
+            score: result.score,
+          })),
+        };
+      } catch (err) {
+        console.warn("Tavily search failed, using native fallback:", err);
       }
-
-      const response = await client.search(query, {
-        searchDepth: "basic",
-        maxResults: 5,
-        includeAnswer: true,
-      });
-
-      return {
-        query,
-        answer:
-          typeof response.answer === "string" ? response.answer : undefined,
-        results: (response.results ?? []).map((result) => ({
-          title: result.title ?? result.url ?? "Untitled",
-          url: result.url ?? "",
-          content: result.content ?? "",
-          score: result.score,
-        })),
-      };
-    } catch (err) {
-      console.warn("Tavily search failed, using native fallback:", err);
     }
-  }
 
-  return searchWebFallback(query);
+    return searchWebFallback(query);
+  });
 }
 
 export function formatTavilyResultsForPrompt(

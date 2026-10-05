@@ -10,6 +10,11 @@ import {
   generateArtifactContent,
 } from "./artifact-generation.service.js";
 import type { CreateArtifactInput } from "./artifact.validation.js";
+import {
+  buildCacheKey,
+  getOrSetCache,
+  delCache,
+} from "../../lib/cache.js";
 
 const workspaceRepo = new WorkspaceRepository();
 
@@ -26,7 +31,10 @@ export async function listArtifactsForWorkspace(
   userId: string,
 ) {
   await assertWorkspaceAccess(workspaceId, userId);
-  return artifactRepository.findArtifactsByWorkspaceId(workspaceId);
+  const key = buildCacheKey("artifacts", workspaceId);
+  return getOrSetCache(key, 180, () =>
+    artifactRepository.findArtifactsByWorkspaceId(workspaceId),
+  );
 }
 
 export async function getArtifactForWorkspace(
@@ -36,16 +44,19 @@ export async function getArtifactForWorkspace(
 ) {
   await assertWorkspaceAccess(workspaceId, userId);
 
-  const artifact = await artifactRepository.findArtifactByIdAndWorkspaceId(
-    artifactId,
-    workspaceId,
-  );
+  const key = buildCacheKey("artifact", artifactId);
+  return getOrSetCache(key, 300, async () => {
+    const artifact = await artifactRepository.findArtifactByIdAndWorkspaceId(
+      artifactId,
+      workspaceId,
+    );
 
-  if (!artifact) {
-    throw new NotFoundError("Artifact not found");
-  }
+    if (!artifact) {
+      throw new NotFoundError("Artifact not found");
+    }
 
-  return artifact;
+    return artifact;
+  });
 }
 
 export async function createArtifactForWorkspace(
@@ -84,6 +95,8 @@ export async function createArtifactForWorkspace(
     workspaceId,
   });
 
+  await delCache(buildCacheKey("artifacts", workspaceId));
+
   return artifact;
 }
 
@@ -94,6 +107,10 @@ export async function deleteArtifactForWorkspace(
 ) {
   await getArtifactForWorkspace(workspaceId, artifactId, userId);
   await artifactRepository.deleteArtifactRecord(artifactId);
+  await delCache(
+    buildCacheKey("artifact", artifactId),
+    buildCacheKey("artifacts", workspaceId),
+  );
 }
 
 export async function processArtifactById(artifactId: string) {
@@ -115,7 +132,7 @@ export async function processArtifactById(artifactId: string) {
       context.text,
     );
 
-    return artifactRepository.updateArtifactRecord(artifactId, {
+    const updated = await artifactRepository.updateArtifactRecord(artifactId, {
       status: "READY",
       content,
       metadata: {
@@ -123,6 +140,13 @@ export async function processArtifactById(artifactId: string) {
         processingError: undefined,
       },
     });
+
+    await delCache(
+      buildCacheKey("artifact", artifactId),
+      buildCacheKey("artifacts", artifact.workspaceId),
+    );
+
+    return updated;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Artifact generation failed";
@@ -133,6 +157,11 @@ export async function processArtifactById(artifactId: string) {
         processingError: message,
       },
     });
+
+    await delCache(
+      buildCacheKey("artifact", artifactId),
+      buildCacheKey("artifacts", artifact.workspaceId),
+    );
 
     throw error;
   }

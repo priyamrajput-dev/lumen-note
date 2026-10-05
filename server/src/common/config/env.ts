@@ -20,11 +20,33 @@ const envSchema = z.object({
   INNGEST_EVENT_KEY: z.string().optional(),
   INNGEST_SIGNING_KEY: z.string().optional(),
   INNGEST_DEV: z.string().optional(),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  REDIS_URL: z.string().default("redis://localhost:6379"),
+  REDIS_KEY_PREFIX: z.string().optional().default("lumennote"),
+  RATE_LIMIT_ENABLED: z
+    .preprocess((val) => {
+      if (typeof val === "string") {
+        return val.toLowerCase() !== "false" && val !== "0";
+      }
+      return val ?? true;
+    }, z.boolean())
+    .default(true),
   MEM0_API_KEY: z.string().optional(),
   TAVILY_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.NODE_ENV === "production" && (!data.REDIS_URL || data.REDIS_URL === "redis://localhost:6379")) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "REDIS_URL is required in production and cannot be default localhost",
+    path: ["REDIS_URL"],
+  },
+);
 
 const createEnv = (env: NodeJS.ProcessEnv) => {
   const safeParseResult = envSchema.safeParse(env);
